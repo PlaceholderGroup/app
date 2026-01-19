@@ -20,7 +20,7 @@ export default function ContactScreen({ contact }: { contact: Contacts.Contact }
             </View>
             <View style={styles.main}>
                 {
-                    (contact) &&
+                    (contact?.phoneNumbers) &&
                     <PhoneNumbers phoneNumbers={contact.phoneNumbers} />
                 }
             </View>
@@ -30,13 +30,13 @@ export default function ContactScreen({ contact }: { contact: Contacts.Contact }
 }
 
 const styles = StyleSheet.create({
-    body: {
-        flex: 1,
-    },
     main: {
         flex: 1,
         padding: 20,
-        gap: 20
+        gap: 20,
+        // NOTE: This background color comes from the default tabs navigator (I think) a similar default color is "whitesmoke" 
+        // although I'm sure at some point we will want to come in with our own colors
+        backgroundColor: "rgb(242, 242, 242)",
     },
     head: {
         alignItems: "center",

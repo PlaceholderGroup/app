@@ -7,7 +7,7 @@ import ContactsContext from "../../contexts/ContactsContext";
 
 export default function RootLayout() {
 
-  const [contacts, setContacts] = useState<Array<Contacts.Contact>>([]);
+  const [contacts, setContacts] = useState<Array<Contacts.ExistingContact>>([]);
 
   useEffect(() => {
     (async () => {
@@ -18,12 +18,6 @@ export default function RootLayout() {
         });
         setContacts(data);
 
-        // if (data.length > 0) {
-        //   const contact = data[0];
-        //   console.log(contact.imageAvailable);
-        //   console.log(contact.image?.uri);
-        //   console.log(contact);
-        // }
       }
     })();
   }, [])

@@ -1,12 +1,21 @@
+import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Avatar from "./Avatar";
 
 export default function ContactsListitem({
     name,
-    photo
-}: { name: string, photo?: string }) {
+    photo,
+    id
+}: { name: string, photo?: string, id: string }) {
+    const router = useRouter();
+
     return (
-        <Pressable onPress={() => console.log(name)}>
+        <Pressable onPress={() => router.navigate({
+            pathname: "/contact/[id]",
+            params: {
+                id
+            }
+        })}>
             <View style={styles.container}>
                 <Avatar source={photo} size={48} name={name} />
                 <Text>{name}</Text>

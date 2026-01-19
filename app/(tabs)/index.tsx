@@ -1,10 +1,10 @@
 import TabsSafeAreaView from "@/components/TabsSafeAreaView";
 
-import ContactScreen from "@/screens/ContactScreen";
 
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
+import ContactScreen from "@/screens/ContactScreen";
 import * as Contacts from "expo-contacts";
 import * as SecureStore from "expo-secure-store";
 
@@ -13,7 +13,7 @@ import * as SecureStore from "expo-secure-store";
 
 export default function Index() {
 
-  const [contact, setContact] = useState<Contacts.Contact>();
+  const [contact, setContact] = useState<Contacts.ExistingContact>();
 
   function getContact(userId: string) {
     Contacts.getContactByIdAsync(userId, [Contacts.Fields.RawImage, Contacts.Fields.PhoneNumbers])
