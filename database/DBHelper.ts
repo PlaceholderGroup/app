@@ -32,10 +32,6 @@ interface iOS_unique{
 }
 
 
-
-
-
-
 class DBHelper {
     private db: SQLite.SQLiteDatabase | null;
 
@@ -293,3 +289,7 @@ class DBHelper {
 
 
 }
+
+
+//export singleton instance of DBHelper:
+export default new DBHelper();
