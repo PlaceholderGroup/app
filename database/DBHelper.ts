@@ -8,11 +8,12 @@ interface User{
     username: string;
     profile_picture: string;
     setting_placeholder: string;
+    created_at: string;
 }
 
 interface Contact{
     contact_code: number;
-    personal: boolean;
+    personal: number;
     firstName: string;
     lastName: string;
 }
@@ -44,6 +45,7 @@ class DBHelper {
 
             await this.db.execAsync('PRAGMA foreign_keys = ON;')
             console.log('DB created successfully.')
+            await this.createTables();
         }
         catch(error){
             console.log('Error wwwhen creating DB: ', error);
@@ -58,7 +60,7 @@ class DBHelper {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             profile_picture TEXT,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )`,
             `CREATE TABLE IF NOT EXISTS contacts(
             contact_code INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,19 +70,21 @@ class DBHelper {
             )`,
             `CREATE TABLE IF NOT EXISTS unique_fields(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            contact_code INTEGER NOT NULL,
             FOREIGN KEY (contact_code) REFERENCES contacts(id) ON DELETE CASCADE,
             field_type TEXT NOT NULL,
             field_value TEXT NOT NULL
             )`,
             `CREATE TABLE IF NOT EXISTS iOS_unique(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            FOREIGN KEY (contact_code) REFEENCES contacts(id) ON DELETE CASCADE,
+            contact_code INTEGER NOT NULL,
+            FOREIGN KEY (contact_code) REFERENCES contacts(id) ON DELETE CASCADE,
             social_field TEXT NOT NULL,
             link TEXT NOT NULL
             )`
         ]
         try{
-            for(const query in queries){
+            for(const query of queries){
                 await this.db!.execAsync(query);
             }
             console.log('Tables created successfully.');
@@ -91,7 +95,7 @@ class DBHelper {
     }
 
     //CREATE:
-    async createNewUser(username:string): Promise<number> {
+    async createUser(username:string): Promise<number> {
         const query = `INSERT INTO users (username) VALUES (?)`;
         try{
             const result = await this.db!.runAsync(query, [username]);
@@ -102,7 +106,7 @@ class DBHelper {
         }
     } 
 
-    async createNewContact (personal:number, firstName:string, lastName?:string): Promise<number> {
+    async createContact (personal:number, firstName:string, lastName?:string): Promise<number> {
         const query = `INSERT INTO contacts (personal, firstName, lastName) VALUES (?,?,?)`;
         try{
             const result = await this.db!.runAsync(query, [personal, firstName, lastName ?? null]);
@@ -114,7 +118,7 @@ class DBHelper {
 
     }
 
-    async createNewUniqueFields(contact_code:number, field_type:string, field_value:string): Promise<number> {
+    async createUniqueFields(contact_code:number, field_type:string, field_value:string): Promise<number> {
         const query = `INSERT INTO unique_fields (contact_code, field_type, field_value) VALUES (?,?,?)`;
         try{
             const result = await this.db!.runAsync(query, [contact_code, field_type, field_value]);
@@ -125,8 +129,8 @@ class DBHelper {
         }
     }
 
-    async createNewiOSUnique(contact_code:number, social_field:string, link:string): Promise<number> {
-        const query = `INSERT INTO unique_fields (contact_code, social_field, link) VALUES (?,?,?)`;
+    async createiOSUnique(contact_code:number, social_field:string, link:string): Promise<number> {
+        const query = `INSERT INTO iOS_unique (contact_code, social_field, link) VALUES (?,?,?)`;
         try{
             const result = await this.db!.runAsync(query, [contact_code, social_field, link]);
             return result.lastInsertRowId;
@@ -152,7 +156,7 @@ class DBHelper {
 
 
     async getContact(IdValue:number): Promise<Contact | null>{
-        const query = `SELECT * FROM contacts WHERE id = ?`;
+        const query = `SELECT * FROM contacts WHERE contact_code = ?`;
         try{
             const result = await this.db!.getFirstAsync<Contact>(query, [IdValue]);
             return result || null;
