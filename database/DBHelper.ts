@@ -167,7 +167,18 @@ class DBHelper {
         
     }
 
-    async uniqueFields(IdValue:number): Promise<unique_field | null>{
+    async getPersonalContacts(): Promise<Contact[] | null>{
+        const query = `SELECT * FROM contacts WHERE personal = 1`;
+        try{
+            const result = await this.db!.getAllAsync<Contact>(query);
+            return result || null;
+        }catch(error){
+            console.log('Error retrieving personal contacts: ', error);
+            throw(error);
+        }
+    }
+
+    async getUniqueFields(IdValue:number): Promise<unique_field | null>{
         const query = `SELECT * FROM unique_fields WHERE id = ?`;
         try{
             const result = await this.db!.getFirstAsync<unique_field>(query, [IdValue]);
