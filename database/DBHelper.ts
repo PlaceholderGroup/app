@@ -94,6 +94,15 @@ class DBHelper {
         }
     }
 
+    //close db for testing
+    async closeDB(): Promise<void> {
+        if(this.db){
+            this.db.closeAsync();
+            this.db = null;
+            console.log('DB closed successfully.')
+        }
+    }
+
     //CREATE:
     async createUser(username:string): Promise<number> {
         const query = `INSERT INTO users (username) VALUES (?)`;
