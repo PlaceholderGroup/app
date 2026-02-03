@@ -1,14 +1,12 @@
 # contact_sharing documentation
-
 ## Summary
 
 - [Introduction](#introduction)
 - [Database Type](#database-type)
 - [Table Structure](#table-structure)
-  - [user](#user)s
-  - [contacts](#contacts)
-  - [unique_fields](#unique_fields)
-  - [iOS_unique](#ios_unique)
+	- [contacts](#contacts)
+	- [is_favorite](#is_favorite)
+	- [social_fields](#social_fields)
 - [Relationships](#relationships)
 - [Database Diagram](#database-diagram)
 
@@ -17,80 +15,52 @@
 ## Database type
 
 - **Database system:** SQLite
-
 ## Table structure
-
-### users
-
-| Name                          | Type        | Settings                               | References | Note |
-| ----------------------------- | ----------- | -------------------------------------- | ---------- | ---- |
-| **id**                  | INTEGER     | 🔑 PK, not null, unique, autoincrement |            |      |
-| **username**            | TEXT(65535) | not null                               |            |      |
-| **profile_picture**     | TEXT(65535) | null                                   |            |      |
-| **setting_placeholder** | TEXT(65535) | null                                   |            |      |
 
 ### contacts
 
-| Name                   | Type        | Settings                | References | Note |
-| ---------------------- | ----------- | ----------------------- | ---------- | ---- |
-| **contact_code** | INTEGER     | 🔑 PK, not null, unique |            |      |
-| **personal**     | BOOLEAN     | not null                |            |      |
-| **firstName**    | TEXT(65535) | not null                |            |      |
-| **lastName**     | TEXT(65535) | null                    |            |      |
+| Name        | Type          | Settings                      | References                    | Note                           |
+|-------------|---------------|-------------------------------|-------------------------------|--------------------------------|
+| **contact_code** | INTEGER | 🔑 PK, not null, unique |  | | 
 
-### unique_fields
 
-| Name                   | Type        | Settings                               | References                             | Note |
-| ---------------------- | ----------- | -------------------------------------- | -------------------------------------- | ---- |
-| **id**           | INTEGER     | 🔑 PK, not null, unique, autoincrement |                                        |      |
-| **contact_code** | INTEGER     | not null                               | fk_unique_fields_contact_code_contacts |      |
-| **field_type**   | TEXT(65535) | not null                               |                                        |      |
-| **field_value**  | TEXT(65535) | not null                               |                                        |      |
+### is_favorite
 
-### iOS_unique
+| Name        | Type          | Settings                      | References                    | Note                           |
+|-------------|---------------|-------------------------------|-------------------------------|--------------------------------|
+| **contact_code** | INTEGER | 🔑 PK, not null | is_favorite_references_contacts | | 
 
-| Name                   | Type        | Settings                               | References                          | Note |
-| ---------------------- | ----------- | -------------------------------------- | ----------------------------------- | ---- |
-| **id**           | INTEGER     | 🔑 PK, not null, unique, autoincrement |                                     |      |
-| **contact_code** | INTEGER     | not null                               | fk_iOS_unique_contact_code_contacts |      |
-| **social_field** | TEXT(65535) | not null                               |                                     |      |
-| **link**         | TEXT(65535) | not null                               |                                     |      |
+
+### social_fields
+
+| Name        | Type          | Settings                      | References                    | Note                           |
+|-------------|---------------|-------------------------------|-------------------------------|--------------------------------|
+| **contact_code** | INTEGER | 🔑 PK, not null | social_fields_references_contacts | |
+| **social_field** | TEXT(65535) | not null |  | |
+| **link** | TEXT(65535) | not null |  | | 
+
 
 ## Relationships
 
-- **iOS_unique to contacts**: many_to_one
-- **unique_fields to contacts**: many_to_one
+- **social_fields to contacts**: many_to_one
+- **is_favorite to contacts**: many_to_one
 
 ## Database Diagram
 
 ```mermaid
 erDiagram
-	iOS_unique }o--|| contacts : references
-	unique_fields }o--|| contacts : references
-
-	user {
-		INTEGER id
-		TEXT(65535) username
-		TEXT(65535) profile_picture
-		TEXT(65535) setting_placeholder
-	}
+	social_fields }o--|| contacts : references
+	is_favorite }o--|| contacts : references
 
 	contacts {
 		INTEGER contact_code
-		BOOLEAN personal
-		TEXT(65535) firstName
-		TEXT(65535) lastName
 	}
 
-	unique_fields {
-		INTEGER id
+	is_favorite {
 		INTEGER contact_code
-		TEXT(65535) field_type
-		TEXT(65535) field_value
 	}
 
-	iOS_unique {
-		INTEGER id
+	social_fields {
 		INTEGER contact_code
 		TEXT(65535) social_field
 		TEXT(65535) link
