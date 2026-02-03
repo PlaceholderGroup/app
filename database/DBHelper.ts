@@ -3,36 +3,6 @@ import * as SQLite from 'expo-sqlite';
 
 //define interfaces for data-types and the values they hold
 
-interface User{
-    id: number;
-    username: string;
-    profile_picture: string;
-    setting_placeholder: string;
-    created_at: string;
-}
-
-interface Contact{
-    contact_code: number;
-    personal: number;
-    firstName: string;
-    lastName: string;
-}
-
-interface unique_field{
-    id: number;
-    contact_code: number;
-    field_type: string;
-    field_value: string;
-}
-
-interface iOS_unique{
-    id: number;
-    contact_code: number;
-    social_field: string;
-    link: string;
-}
-
-
 class DBHelper {
     private db: SQLite.SQLiteDatabase | null;
 
@@ -48,7 +18,7 @@ class DBHelper {
             await this.createTables();
         }
         catch(error){
-            console.log('Error wwwhen creating DB: ', error);
+            console.log('Error when creating DB: ', error);
             throw(error);
         }
     }
@@ -56,28 +26,15 @@ class DBHelper {
 
     async createTables(): Promise<void> {
         const queries: string[] = [
-            `CREATE TABLE IF NOT EXISTS users(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            profile_picture TEXT,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP
-            )`,
             `CREATE TABLE IF NOT EXISTS contacts(
-            contact_code INTEGER PRIMARY KEY AUTOINCREMENT,
-            personal INTEGER DEFAULT 0,
-            firstName TEXT NOT NULL,
-            lastName TEXT
+            contact_code TEXT PRIMARY KEY,
             )`,
-            `CREATE TABLE IF NOT EXISTS unique_fields(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            contact_code INTEGER NOT NULL,
-            FOREIGN KEY (contact_code) REFERENCES contacts(id) ON DELETE CASCADE,
-            field_type TEXT NOT NULL,
-            field_value TEXT NOT NULL
+            `CREATE TABLE IF NOT EXISTS is_favorite(
+            contact_code TEXT NOT NULL,
+            FOREIGN KEY (contact_code) REFERENCES contacts(contact_code) ON DELETE CASCADE,
             )`,
-            `CREATE TABLE IF NOT EXISTS iOS_unique(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            contact_code INTEGER NOT NULL,
+            `CREATE TABLE IF NOT EXISTS social_fields(
+            contact_code TEXT NOT NULL,
             FOREIGN KEY (contact_code) REFERENCES contacts(id) ON DELETE CASCADE,
             social_field TEXT NOT NULL,
             link TEXT NOT NULL
@@ -104,22 +61,15 @@ class DBHelper {
     }
 
     //CREATE:
-    async createUser(username:string): Promise<number> {
-        const query = `INSERT INTO users (username) VALUES (?)`;
-        try{
-            const result = await this.db!.runAsync(query, [username]);
-            return result.lastInsertRowId;
-        }catch(error){
-            console.log('Error creating new user: ', error);
-            throw(error);
-        }
-    } 
 
-    async createContact (personal:number, firstName:string, lastName?:string): Promise<number> {
-        const query = `INSERT INTO contacts (personal, firstName, lastName) VALUES (?,?,?)`;
+    async createContact (contact_code:string): Promise<string> {
+        const query = `INSERT INTO contacts (contact_code) VALUES (?) RETURNING contact_code`;
         try{
-            const result = await this.db!.runAsync(query, [personal, firstName, lastName ?? null]);
-            return result.lastInsertRowId;
+            const result = await this.db!.getFirstAsync<{ contact_code:string }>(query, contact_code);
+            if(!result){
+                throw new Error('Failed to create contact: No result returned.');
+            } 
+            return result.contact_code;
         }catch(error){
             console.log('Error when creating new contact: ', error);
             throw(error);
@@ -127,48 +77,57 @@ class DBHelper {
 
     }
 
-    async createUniqueFields(contact_code:number, field_type:string, field_value:string): Promise<number> {
-        const query = `INSERT INTO unique_fields (contact_code, field_type, field_value) VALUES (?,?,?)`;
+    async createSocialFields (contact_code:string, social_field:string, link:string): Promise<string> {
+        const query = `INSERT INTO social_fields (contact_code, social_field, link) VALUES (?,?,?) RETURNING contact_code`;
         try{
-            const result = await this.db!.runAsync(query, [contact_code, field_type, field_value]);
-            return result.lastInsertRowId;
+            const result = await this.db!.getFirstAsync<{ contact_code:string }>(query, contact_code, social_field, link);
+            if(!result){
+                throw new Error('Failed to create social_field: No result returned.');
+            } 
+            return result.contact_code;
         }catch(error){
-            console.log('Error when creating new unique field: ', error);
+            console.log('Error when creating new contact: ', error);
             throw(error);
         }
+
     }
 
-    async createiOSUnique(contact_code:number, social_field:string, link:string): Promise<number> {
-        const query = `INSERT INTO iOS_unique (contact_code, social_field, link) VALUES (?,?,?)`;
+    async createIsFavorite (contact_code:string): Promise<string> {
+        const query = `INSERT INTO is_favorite (contact_code) VALUES (?) RETURNING contact_code`;
         try{
-            const result = await this.db!.runAsync(query, [contact_code, social_field, link]);
-            return result.lastInsertRowId;
+            const result = await this.db!.getFirstAsync<{ contact_code:string }>(query, contact_code);
+            if(!result){
+                throw new Error('Failed to create is_favorite: No result returned.');
+            } 
+            return result.contact_code;
         }catch(error){
-            console.log('Error when creating new iOS social field: ', error);
+            console.log('Error when creating new contact: ', error);
             throw(error);
         }
-}
+
+    }
 
 
     //READ:
-    async getUser(IdValue:number): Promise<User | null>{
-        const query = `SELECT * FROM users WHERE id = ?`;
+    async getAllContacts(): Promise<Array<string>>{
+        const query = `SELECT * FROM contacts`;
         try{
-            const result = await this.db!.getFirstAsync<User>(query, [IdValue]);
-            return result || null;
+            const result = await this.db!.getAllAsync<string>(query);
+            return result;
         }catch(error){
-            console.log('Error when retrieving User: ', error);
+            console.log('Error retrieving all contacts: ', error);
             throw(error);
         }
-        
     }
 
-
-    async getContact(IdValue:number): Promise<Contact | null>{
+    async getContact(contact_code:number): Promise<string>{
         const query = `SELECT * FROM contacts WHERE contact_code = ?`;
         try{
-            const result = await this.db!.getFirstAsync<Contact>(query, [IdValue]);
-            return result || null;
+            const result = await this.db!.getFirstAsync<string>(query, [contact_code]);
+            if(!result){
+                throw new Error('Failed to retrieve contact.')
+            }
+            return result;
         }catch(error){
             console.log('Error when retrieving Contact: ', error);
             throw(error);
@@ -176,24 +135,16 @@ class DBHelper {
         
     }
 
-    async getPersonalContacts(): Promise<Contact[] | null>{
-        const query = `SELECT * FROM contacts WHERE personal = 1`;
+    async getSocialFields(contact_code:number): Promise<Array<string>>{
+        const query = `SELECT * FROM social_fields WHERE contact_code = ?`;
         try{
-            const result = await this.db!.getAllAsync<Contact>(query);
-            return result || null;
+            const result = await this.db!.getAllAsync<string>(query, [contact_code]);
+            if(!result){
+                throw new Error('Failed to retrieve social fields.')
+            }
+            return result;
         }catch(error){
-            console.log('Error retrieving personal contacts: ', error);
-            throw(error);
-        }
-    }
-
-    async getUniqueFields(IdValue:number): Promise<unique_field | null>{
-        const query = `SELECT * FROM unique_fields WHERE id = ?`;
-        try{
-            const result = await this.db!.getFirstAsync<unique_field>(query, [IdValue]);
-            return result || null;
-        }catch(error){
-            console.log('Error when retrieving field: ', error);
+            console.log('Error when retrieving social fields: ', error);
             throw(error);
         }
         
@@ -213,18 +164,6 @@ class DBHelper {
     
 
     //UPDATE:
-
-    async updateUser(IdValue:number, username:string|null, profile_picture: string|null, setting_placeholder:string|null): Promise<number>{
-        const query = `UPDATE users SET username = ?, profile_picture = ?, setting_placeholder = ? WHERE id = ?`;
-        try{
-            const result = await this.db!.runAsync(query, [username, profile_picture, setting_placeholder, IdValue]);
-            console.log('Rows affected:', result.changes);
-            return result.changes;
-        }catch(error){
-            console.log('Error when updating user values:', error);
-            throw(error);
-        }
-    }
 
     async updateContact(contact_code:number, firstName:string|null, lastName: string|null,): Promise<number>{
         const query = `UPDATE contacts SET firstName = ?, lastName = ? WHERE contact_code = ?`;
@@ -265,17 +204,6 @@ class DBHelper {
 
 
     //DELETE:
-
-    async deleteUser(IdValue:number):Promise<number>{
-        const query = 'DELETE FROM users WHERE id = ?';
-        try{
-            const result = await this.db!.runAsync(query, [IdValue]);
-            return result.changes;
-        }catch(error){
-            console.log('Error when deleting user:', error);
-            throw(error);
-        }
-    }
 
     async deleteContact(IdValue:number):Promise<number>{
         const query = 'DELETE FROM contacts WHERE contact_code = ?';
