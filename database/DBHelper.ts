@@ -120,7 +120,7 @@ class DBHelper {
         }
     }
 
-    async getContact(contact_code:number): Promise<string>{
+    async getContact(contact_code:string): Promise<string>{
         const query = `SELECT * FROM contacts WHERE contact_code = ?`;
         try{
             const result = await this.db!.getFirstAsync<string>(query, [contact_code]);
@@ -135,7 +135,7 @@ class DBHelper {
         
     }
 
-    async getSocialFields(contact_code:number): Promise<Array<string>>{
+    async getSocialFields(contact_code:string): Promise<Array<string>>{
         const query = `SELECT * FROM social_fields WHERE contact_code = ?`;
         try{
             const result = await this.db!.getAllAsync<string>(query, [contact_code]);
@@ -150,13 +150,16 @@ class DBHelper {
         
     }
 
-    async getIosUnique(IdValue:number): Promise<iOS_unique | null>{
-        const query = `SELECT * FROM iOS_unique WHERE id = ?`;
+    async getIsFavorite(contact_code:string): Promise<string>{
+        const query = `SELECT * FROM is_favorite WHERE contact_code = ?`;
         try{
-            const result = await this.db!.getFirstAsync<iOS_unique>(query, [IdValue]);
-            return result || null;
+            const result = await this.db!.getFirstAsync<string>(query, [contact_code]);
+            if(!result){
+                return "False";
+            }
+            return "True";
         }catch(error){
-            console.log('Error when retrieving iOS field: ', error);
+            console.log('Error when retrieving is_favorite: ', error);
             throw(error);
         }
         
@@ -164,51 +167,24 @@ class DBHelper {
     
 
     //UPDATE:
-
-    async updateContact(contact_code:number, firstName:string|null, lastName: string|null,): Promise<number>{
-        const query = `UPDATE contacts SET firstName = ?, lastName = ? WHERE contact_code = ?`;
+    
+    async updateSocialFields(contact_code:string, social_field:string, link: string): Promise<number>{
+        const query = `UPDATE social_fields SET social_field = ?, link = ? WHERE contact_code = ?`;
         try{
-            const result = await this.db!.runAsync(query, [firstName, lastName, contact_code]);
+            const result = await this.db!.runAsync(query, [social_field, link, contact_code]);
             console.log('Rows affected:', result.changes);
             return result.changes;
         }catch(error){
-            console.log('Error when updating contact values:', error);
+            console.log('Error when updating social field values:', error);
             throw(error);
         }
     }
-    
-    async updateUniqueFields(IdValue:number, field_type:string|null, field_value: string|null): Promise<number>{
-        const query = `UPDATE unique_fields SET field_type = ?, field_value = ? WHERE id = ?`;
-        try{
-            const result = await this.db!.runAsync(query, [field_type, field_value, IdValue]);
-            console.log('Rows affected:', result.changes);
-            return result.changes;
-        }catch(error){
-            console.log('Error when updating unique field values:', error);
-            throw(error);
-        }
-    }
-    
-    async updateiOSUnique(IdValue:number, social_field:string|null, link: string|null): Promise<number>{
-        const query = `UPDATE iOS_unique SET social_field = ?, link = ? WHERE id = ?`;
-        try{
-            const result = await this.db!.runAsync(query, [social_field, link, IdValue]);
-            console.log('Rows affected:', result.changes);
-            return result.changes;
-        }catch(error){
-            console.log('Error when updating iOS field values:', error);
-            throw(error);
-        }
-    } 
-
-
 
     //DELETE:
-
-    async deleteContact(IdValue:number):Promise<number>{
+    async deleteContact(contact_code:string):Promise<number>{
         const query = 'DELETE FROM contacts WHERE contact_code = ?';
         try{
-            const result = await this.db!.runAsync(query, [IdValue]);
+            const result = await this.db!.runAsync(query, [contact_code]);
             return result.changes;
         }catch(error){
             console.log('Error when deleting contact:', error);
@@ -216,24 +192,24 @@ class DBHelper {
         }
     }
     
-    async deleteUniqueField(IdValue:number):Promise<number>{
-        const query = 'DELETE FROM unique_fields WHERE id = ?';
+    async deleteSocialField(contact_code:string, social_field:string):Promise<number>{
+        const query = 'DELETE FROM social_fields WHERE contact_code = ? AND social_field = ?';
         try{
-            const result = await this.db!.runAsync(query, [IdValue]);
+            const result = await this.db!.runAsync(query, [contact_code, social_field]);
             return result.changes;
         }catch(error){
-            console.log('Error when deleting unique field:', error);
+            console.log('Error when deleting social field:', error);
             throw(error);
         }
     }
     
-    async deleteiOSUnique(IdValue:number):Promise<number>{
-        const query = 'DELETE FROM iOS_unique WHERE id = ?';
+    async deleteIsFavorite(contact_code:string):Promise<number>{
+        const query = 'DELETE FROM is_favorite WHERE contact_code = ?';
         try{
-            const result = await this.db!.runAsync(query, [IdValue]);
+            const result = await this.db!.runAsync(query, [contact_code]);
             return result.changes;
         }catch(error){
-            console.log('Error when deleting unique iOS field:', error);
+            console.log('Error when deleting is_favorite:', error);
             throw(error);
         }
     }    
@@ -243,5 +219,5 @@ class DBHelper {
 }
 
 
-//export singleton instance of DBHelper:
+//export singleton instance of DBHelper (new keyword exports a single instance of DBHelper() no new keyword would export the class):
 export default new DBHelper();
