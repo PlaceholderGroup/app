@@ -20,8 +20,8 @@ export class DBHelper {
 async getContactObj(contact_code:string):Promise<ContactObj> {
     const result: ContactObj = {
         contact_code: contact_code,
-        is_favorite: this.getIsFavorite(contact_code),
-        social_fields: this.getSocialFields(contact_code)
+        is_favorite: await this.getIsFavorite(contact_code),
+        social_fields: await this.getSocialFields(contact_code)
     }
     return result
 }
@@ -29,11 +29,11 @@ async getContactObj(contact_code:string):Promise<ContactObj> {
 //UPDATE
 async updateContactObj(contact_code:string, is_favorite:boolean, social_fields:Array<SocialObj>):Promise<ContactObj>{
     for(let i = 0; i < social_fields.length; i++ )
-        this.updateSocialFields(contact_code, social_fields[i].social_field, social_fields[i].link)
+        await this.updateSocialFields(contact_code, social_fields[i].social_field, social_fields[i].link)
     if(is_favorite){
-        this.createIsFavorite(contact_code);
+        await this.createIsFavorite(contact_code);
     }else{
-        this.deleteIsFavorite(contact_code);
+        await this.deleteIsFavorite(contact_code);
     }
     const result = this.getContactObj(contact_code)
     return result
