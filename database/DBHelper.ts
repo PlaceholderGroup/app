@@ -2,17 +2,49 @@ import * as SQLite from 'expo-sqlite';
 
 
 //define interfaces for data-types and the values they hold
-interface social_obj{
+interface SocialObj{
     social_field: string,
     link: string
 }
-interface contact_obj{
+interface ContactObj{
     contact_code:string,
-    is_favorite:boolean,
-    social_fields:Array<social_obj>
+    is_favorite:boolean | Promise<boolean>,
+    social_fields:Array<SocialObj> | Promise<Array<SocialObj>>
 }
 
 export class DBHelper {
+
+//getters/setters/deleter for contact object meant to be publicly accessible:
+
+//GET
+async getContactObj(contact_code:string):Promise<ContactObj> {
+    const result: ContactObj = {
+        contact_code: contact_code,
+        is_favorite: this.getIsFavorite(contact_code),
+        social_fields: this.getSocialFields(contact_code)
+    }
+    return result
+}
+
+//UPDATE
+async updateContactObj(contact_code:string, is_favorite:boolean, social_fields:Array<SocialObj>):Promise<ContactObj>{
+    for(let i = 0; i < social_fields.length; i++ )
+        this.updateSocialFields(contact_code, social_fields[i].social_field, social_fields[i].link)
+    if(is_favorite){
+        this.createIsFavorite(contact_code);
+    }else{
+        this.deleteIsFavorite(contact_code);
+    }
+    const result = this.getContactObj(contact_code)
+    return result
+}
+//DELETE
+async deleteContactObj(contact_code:string):Promise<number>{
+    const result = this.deleteContact(contact_code)
+    return result
+}
+
+
     private db: SQLite.SQLiteDatabase | null;
 
     constructor(){
@@ -39,7 +71,7 @@ export class DBHelper {
             contact_code TEXT PRIMARY KEY,
             )`,
             `CREATE TABLE IF NOT EXISTS is_favorite(
-            contact_code TEXT NOT NULL,
+            contact_code TEXT UNIQUE NOT NULL,
             FOREIGN KEY (contact_code) REFERENCES contacts(contact_code) ON DELETE CASCADE,
             )`,
             `CREATE TABLE IF NOT EXISTS social_fields(
@@ -144,10 +176,10 @@ export class DBHelper {
         
     }
 
-    private async getSocialFields(contact_code:string): Promise<Array<string>>{
+    private async getSocialFields(contact_code:string): Promise<Array<SocialObj>>{
         const query = `SELECT * FROM social_fields WHERE contact_code = ?`;
         try{
-            const result = await this.db!.getAllAsync<string>(query, [contact_code]);
+            const result = await this.db!.getAllAsync<SocialObj>(query, [contact_code]);
             if(!result){
                 throw new Error('Failed to retrieve social fields.')
             }
@@ -159,14 +191,15 @@ export class DBHelper {
         
     }
 
-    private async getIsFavorite(contact_code:string): Promise<string>{
+    private async getIsFavorite(contact_code:string): Promise<boolean>{
         const query = `SELECT * FROM is_favorite WHERE contact_code = ?`;
         try{
             const result = await this.db!.getFirstAsync<string>(query, [contact_code]);
+            
             if(!result){
-                return "False";
+                return false;
             }
-            return "True";
+            return true;
         }catch(error){
             console.log('Error when retrieving is_favorite: ', error);
             throw(error);
@@ -223,17 +256,7 @@ export class DBHelper {
         }
     }    
 
-//getters/setters/deleter for contact code meant to be publicly accessible:
 
-//GET
-async getContactObj(contact_code:string) {
-    
-
-}
-
-//UPDATE
-
-//DELETE
 
 }
 
