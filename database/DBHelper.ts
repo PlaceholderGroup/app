@@ -15,6 +15,25 @@ interface ContactObj{
 export class DBHelper {
 
 //getters/setters/deleter for contact object meant to be publicly accessible:
+//CREATE
+async createContactObj(contactCode:string, isFavorite:boolean, socialObj:Array<SocialObj>):Promise<ContactObj> {
+    
+    if(isFavorite){
+        await this.createIsFavorite(contactCode)
+    }
+    const result: ContactObj={
+        contact_code: contactCode,
+        is_favorite: isFavorite,
+        social_fields:socialObj
+
+    }
+    return result
+}
+
+async createSocialObj(){
+
+
+}
 
 //GET
 async getContactObj(contact_code:string):Promise<ContactObj> {
@@ -65,6 +84,8 @@ async deleteContactObj(contact_code:string):Promise<number>{
     }
     
 
+
+    //PRIVATE FUNCTIONS
     private async createTables(): Promise<void> {
         const queries: string[] = [
             `CREATE TABLE IF NOT EXISTS contacts(
