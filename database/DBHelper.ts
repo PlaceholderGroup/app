@@ -9,30 +9,38 @@ interface SocialObj{
 interface ContactObj{
     contact_code:string,
     is_favorite:boolean | Promise<boolean>,
-    social_fields:Array<SocialObj> | Promise<Array<SocialObj>>
+    social_Objs?:Array<SocialObj> | Promise<Array<SocialObj>>
 }
 
 export class DBHelper {
 
 //getters/setters/deleter for contact object meant to be publicly accessible:
 //CREATE
-async createContactObj(contactCode:string, isFavorite:boolean, socialObj:Array<SocialObj>):Promise<ContactObj> {
+async createContactObj(contactCode:string, isFavorite:boolean, socialObjs?:Array<SocialObj>):Promise<ContactObj> {
     
+    
+    await this.createContact(contactCode)
     if(isFavorite){
         await this.createIsFavorite(contactCode)
     }
     const result: ContactObj={
         contact_code: contactCode,
         is_favorite: isFavorite,
-        social_fields:socialObj
+        social_Objs:socialObjs
 
+    }
+    if(socialObjs){
+        for(const object of socialObjs){
+        await this.createSocialObj(contactCode, object.social_field, object.link)
+        }
     }
     return result
 }
 
-async createSocialObj(){
-
-
+async createSocialObj(contactCode:string, socialField:string, link:string):Promise<SocialObj> {
+    await this.createSocialFields(contactCode, socialField, link)
+    const result : SocialObj =  {social_field:socialField, link : link}
+    return result
 }
 
 //GET
@@ -40,32 +48,51 @@ async getContactObj(contact_code:string):Promise<ContactObj> {
     const result: ContactObj = {
         contact_code: contact_code,
         is_favorite: await this.getIsFavorite(contact_code),
-        social_fields: await this.getSocialFields(contact_code)
+        social_Objs: await this.getSocialFields(contact_code)
     }
+    return result
+}
+//get single social field
+async getSocialObj(contactCode:string, socialField:string){
+    const result = await this.getSingleSocialField(contactCode,socialField)
+}
+//get all social fields associated with a contact
+async getAllSocialObj(contactCode:string):Promise<Array<SocialObj>>{
+    const result = await this.getSocialFields(contactCode)
     return result
 }
 
 //UPDATE
-async updateContactObj(contact_code:string, is_favorite:boolean, social_fields:Array<SocialObj>):Promise<ContactObj>{
-    for(let i = 0; i < social_fields.length; i++ )
-        await this.updateSocialFields(contact_code, social_fields[i].social_field, social_fields[i].link)
-    if(is_favorite){
-        await this.createIsFavorite(contact_code);
-    }else{
-        await this.deleteIsFavorite(contact_code);
-    }
-    const result = this.getContactObj(contact_code)
+async updateSocialObj(contactCode:string, oldSocialField:string, newSocialField:string, link:string):Promise<SocialObj>{
+    await this.updateSocialField(contactCode,oldSocialField,newSocialField,link)
+    const result = this.getSingleSocialField(contactCode,newSocialField)
     return result
+
 }
+// async updateContactObj(contact_code:string, is_favorite:boolean, social_fields:Array<SocialObj>):Promise<ContactObj>{
+//     for(let i = 0; i < social_fields.length; i++ )
+//         await this.updateSocialFields(contact_code, social_fields[i].social_field, social_fields[i].link)
+//     if(is_favorite){
+//         await this.createIsFavorite(contact_code);
+//     }else{
+//         await this.deleteIsFavorite(contact_code);
+//     }
+//     const result = this.getContactObj(contact_code)
+//     return result
+//}
 //DELETE
 async deleteContactObj(contact_code:string):Promise<number>{
     const result = this.deleteContact(contact_code)
     return result
 }
 
+async deleteSocialObj(contactCode:string, socialField:string):Promise<number>{
+    const result = this.deleteSocialField(contactCode,socialField)
+    return result
+}
 
+//PRIVATE FUNCTIONS
     private db: SQLite.SQLiteDatabase | null;
-
     constructor(){
         this.db = null;
     }
@@ -85,7 +112,7 @@ async deleteContactObj(contact_code:string):Promise<number>{
     
 
 
-    //PRIVATE FUNCTIONS
+ 
     private async createTables(): Promise<void> {
         const queries: string[] = [
             `CREATE TABLE IF NOT EXISTS contacts(
@@ -197,6 +224,20 @@ async deleteContactObj(contact_code:string):Promise<number>{
         
     }
 
+    private async getSingleSocialField(contactCode:string, socialField:string): Promise<SocialObj>{
+        const query = `SELECT * FROM social_fields WHERE contact_code = ? AND social_field = ?`;
+        try{
+            const result = await this.db!.getFirstAsync<SocialObj>(query, [contactCode,socialField])
+            if(!result){
+                throw new Error('Failed to retrieve social field')
+            }
+            return result
+        }
+        catch(error){
+            throw(error)
+        }
+
+    }
     private async getSocialFields(contact_code:string): Promise<Array<SocialObj>>{
         const query = `SELECT * FROM social_fields WHERE contact_code = ?`;
         try{
@@ -231,10 +272,10 @@ async deleteContactObj(contact_code:string):Promise<number>{
 
     //UPDATE:
     
-    private async updateSocialFields(contact_code:string, social_field:string, link: string): Promise<number>{
-        const query = `UPDATE social_fields SET social_field = ?, link = ? WHERE contact_code = ?`;
+    private async updateSocialField(contact_code:string, oldSocialField:string, social_field:string, link: string): Promise<number>{
+        const query = `UPDATE social_fields SET social_field = ?, link = ? WHERE contact_code = ? AND social_field = ?`;
         try{
-            const result = await this.db!.runAsync(query, [social_field, link, contact_code]);
+            const result = await this.db!.runAsync(query, [social_field, link, contact_code, oldSocialField]);
             console.log('Rows affected:', result.changes);
             return result.changes;
         }catch(error){
