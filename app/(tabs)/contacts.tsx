@@ -16,7 +16,9 @@ export default function ContactsScreen() {
             {contacts !== undefined &&
                 <FlatList
                     data={contacts}
-                    renderItem={({ item }) => <ContactsListitem id={item.id} name={item.name} photo={item.image?.uri} />}
+                    renderItem={({ item }) => {
+                    return <ContactsListitem id={item.id} name={item.name} photo={item.image?.uri} />
+                }}
                 />
             }
         </TabsSafeAreaView>

@@ -14,7 +14,8 @@ export default function RootLayout() {
       const { status } = await Contacts.requestPermissionsAsync();
       if (status === 'granted') {
         const { data } = await Contacts.getContactsAsync({
-          sort: Contacts.SortTypes.FirstName
+          sort: Contacts.SortTypes.FirstName, 
+          fields: [Contacts.Fields.Name]
         });
         setContacts(data);
 
