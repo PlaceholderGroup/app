@@ -1,38 +1,15 @@
 import Avatar from "@/components/Avatar";
 import PhoneNumbers from "@/components/PhoneNumbers";
 import { Button, StyleSheet, Text, View } from "react-native";
-import NfcManager, { Ndef, NfcTech } from 'react-native-nfc-manager';
-
 
 import * as Contacts from "expo-contacts";
+import { shareContact } from "./NFC";
 
-async function shareContact(contact: Contacts.Contact) {
-    console.log(contact);
-
-    let result = false;
-
-    try {
-        await NfcManager.requestTechnology(NfcTech.Ndef);
-
-        const bytes = Ndef.encodeMessage([Ndef.textRecord("Hello NFC!")]);
-
-        if (bytes) {
-            await NfcManager.ndefHandler.writeNdefMessage(bytes);
-            result = true;
-        }
-    } catch (error) {
-        console.log(error);
-    } finally {
-        NfcManager.cancelTechnologyRequest();
-    }
-
-    console.log(result);
-
-    return result;
-}
+// if (Platform.OS === "android") {
+// }
 
 
-export default function ContactScreen({ contact }: { contact: Contacts.Contact }) {
+export default function ContactScreen({ contact }: { contact: Contacts.ExistingContact }) {
     return (
         <>
             <View style={styles.head}>
@@ -49,7 +26,7 @@ export default function ContactScreen({ contact }: { contact: Contacts.Contact }
                     (contact?.phoneNumbers) &&
                     <PhoneNumbers phoneNumbers={contact.phoneNumbers} />
                 }
-                <Button title="Share Contact" onPress={() => shareContact(contact)} />
+                <Button title="Share Contact" onPress={() => shareContact(contact)}  />
             </View>
         </>
 

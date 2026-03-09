@@ -8,7 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Contact() {
     const { id } = useLocalSearchParams<{ id: string }>();
-    const [contact, setContact] = useState<Contacts.Contact>();
+    const [contact, setContact] = useState<Contacts.ExistingContact>();
 
     function getContact(userId: string) {
         Contacts.getContactByIdAsync(userId, [Contacts.Fields.RawImage, Contacts.Fields.PhoneNumbers])

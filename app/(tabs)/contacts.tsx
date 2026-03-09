@@ -13,10 +13,14 @@ export default function ContactsScreen() {
     // https://reactnative.dev/docs/sectionlist
     return (
         <TabsSafeAreaView>
-            <FlatList
-                data={contacts}
-                renderItem={({ item }) => <ContactsListitem id={item.id} name={item.name} photo={item.image?.uri} />}
-            />
+            {contacts !== undefined &&
+                <FlatList
+                    data={contacts}
+                    renderItem={({ item }) => {
+                    return <ContactsListitem id={item.id} name={item.name} photo={item.image?.uri} />
+                }}
+                />
+            }
         </TabsSafeAreaView>
     )
 }
