@@ -1,4 +1,6 @@
+import * as Contacts from "expo-contacts";
 import * as SQLite from 'expo-sqlite';
+
 
 
 //define interfaces for data-types and the values they hold
@@ -16,22 +18,25 @@ export class DBHelper {
 
 //getters/setters/deleter for contact object meant to be publicly accessible:
 //CREATE
-async createContactObj(contactCode:string, isFavorite:boolean, socialObjs?:Array<SocialObj>):Promise<ContactObj> {
+async createContactObj(incomingContact: Contacts.Contact, contactCode:string):Promise<Contacts.Contact> {
     
     
     await this.createContact(contactCode)
-    if(isFavorite){
+    if(incomingContact.isFavorite){
         await this.createIsFavorite(contactCode)
     }
-    const result: ContactObj={
-        contact_code: contactCode,
-        is_favorite: isFavorite,
-        social_Objs:socialObjs
+    const result = incomingContact
+        // ContactObj={
+        // contact_code: contactCode,
+        // is_favorite: isFavorite,
+        // social_Objs:socialObjs
 
-    }
-    if(socialObjs){
-        for(const object of socialObjs){
-        await this.createSocialObj(contactCode, object.social_field, object.link)
+    
+    if(incomingContact.socialProfiles){
+        for(const object of incomingContact.socialProfiles){
+            if (object.service && object.url){
+            await this.createSocialObj(contactCode, object.service, object.url)
+            }
         }
     }
     return result
@@ -44,14 +49,22 @@ async createSocialObj(contactCode:string, socialField:string, link:string):Promi
 }
 
 //GET
-async getContactObj(contact_code:string):Promise<ContactObj> {
-    const result: ContactObj = {
-        contact_code: contact_code,
-        is_favorite: await this.getIsFavorite(contact_code),
-        social_Objs: await this.getSocialFields(contact_code)
+async getContactObj(contact_code:string):Promise<Contacts.ExistingContact | string> {
+    const result = await Contacts.getContactByIdAsync(contact_code)
+    if(!result){
+        return 'No existing contact'
     }
+    //  ContactObj = {
+    //     contact_code: contact_code,
+    //     is_favorite: await this.getIsFavorite(contact_code),
+    //     social_Objs: await this.getSocialFields(contact_code)
+    // }
+
     return result
 }
+
+// CURRENT PROGRESS ENDS HERE FOR UPDATING TO USING EXPO CONTACTS!!!!
+
 //get single social field
 async getSocialObj(contactCode:string, socialField:string){
     const result = await this.getSingleSocialField(contactCode,socialField)
