@@ -25,6 +25,7 @@ async createContactObj(incomingContact: Contacts.Contact, contactCode:string):Pr
     if(incomingContact.isFavorite){
         await this.createIsFavorite(contactCode)
     }
+    Contacts.addContactAsync(incomingContact)
     const result = incomingContact
         // ContactObj={
         // contact_code: contactCode,
