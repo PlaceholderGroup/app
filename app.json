@@ -73,10 +73,7 @@
           "nfcPermission": "Allow $(PRODUCT_NAME) to interact with nearby NFC devices"
         }
       ],
-      "expo-sqlite",
-      "expo-font",
-      "expo-image",
-      "expo-web-browser"
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,
