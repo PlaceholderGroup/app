@@ -39,7 +39,6 @@ const styles = StyleSheet.create({
         gap: 10,
         borderRadius: 20,
         alignSelf: "flex-start",
-        margin: "auto",
         minHeight: 56,
         minWidth: 56,
     },
