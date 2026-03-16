@@ -5,9 +5,6 @@ import { Button, StyleSheet, Text, View } from "react-native";
 import * as Contacts from "expo-contacts";
 import { shareContact } from "./NFC";
 
-// if (Platform.OS === "android") {
-// }
-
 
 export default function ContactScreen({ contact }: { contact: Contacts.ExistingContact }) {
     return (

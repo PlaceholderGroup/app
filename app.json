@@ -34,17 +34,15 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-    //need to check if we're using CNG with this
     "plugins": [
-        [
+      [
         "expo-contacts",
         {
           "contactsPermission": "Allow $(PRODUCT_NAME) to access your contacts."
-        }],
+        }
+      ],
       "expo-router",
       [
-
-
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
@@ -75,7 +73,8 @@
           "nfcPermission": "Allow $(PRODUCT_NAME) to interact with nearby NFC devices"
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,

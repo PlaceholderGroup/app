@@ -1,5 +1,6 @@
+import { Lexend_400Regular, Lexend_500Medium, useFonts } from "@expo-google-fonts/lexend";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Tabs } from "expo-router";
+import { SplashScreen, Tabs } from "expo-router";
 
 import * as Contacts from "expo-contacts";
 import { useEffect, useState } from "react";
@@ -8,6 +9,17 @@ import ContactsContext from "../../contexts/ContactsContext";
 export default function RootLayout() {
 
   const [contacts, setContacts] = useState<Array<Contacts.ExistingContact>>([]);
+
+  const [loaded, error] = useFonts({
+    Lexend_400Regular,
+    Lexend_500Medium,
+  })
+
+  useEffect(() => {
+    if (loaded || error) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded, error]);
 
   useEffect(() => {
     (async () => {
