@@ -3,8 +3,9 @@ import PhoneNumbers from "@/components/PhoneNumbers";
 import { StyleSheet, Text, View } from "react-native";
 
 import Button from "@/components/Button";
+import { openLink } from "@/utils/link";
 import * as Contacts from "expo-contacts";
-import { shareContact } from "./NFC";
+import { shareContact } from "../utils/NFC";
 
 
 export default function ContactScreen({ contact }: { contact: Contacts.ExistingContact }) {
@@ -17,12 +18,20 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
                         <Avatar source={contact.image?.uri} size={192} name={contact.name} />
                         <Text style={styles.name}>{contact.name}</Text>
                         <View style={styles.buttons}>
-                            <Button icon="phone" />
-                            <Button icon="chat-bubble" />
-                            <Button icon="videocam" />
-                            <Button icon="email" />
+                            <Button icon="phone" disabled={!contact.phoneNumbers} onPress={() => {
+                                contact.phoneNumbers?.[0]?.number && openLink(contact.phoneNumbers?.[0]?.number, "tel");
+                            }} />
+                            <Button icon="chat-bubble" disabled={!contact.phoneNumbers} onPress={() => {
+                                contact.phoneNumbers?.[0]?.number && openLink(contact.phoneNumbers?.[0]?.number, "sms");
+                            }} />
+                            <Button icon="videocam" disabled={!contact.phoneNumbers} onPress={() => {
+                                contact.phoneNumbers?.[0]?.number && openLink(contact.phoneNumbers?.[0]?.number, "video");
+                            }} />
+                            <Button icon="email" disabled={!contact.emails} onPress={() => {
+                                contact.emails?.[0]?.email && openLink(contact.emails?.[0]?.email, "email");
+                            }} />
                         </View>
-                        <Button title="Share Contact" icon="share" type="tertiary" style={styles.shareButton} onPress={() => shareContact(contact)}  />
+                        <Button title="Share Contact" icon="share" type="tertiary" style={styles.shareButton} onPress={() => shareContact(contact)} />
                     </>
                 }
             </View>

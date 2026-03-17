@@ -16,7 +16,7 @@ export default function Index() {
   const [contact, setContact] = useState<Contacts.ExistingContact>();
 
   function getContact(userId: string) {
-    Contacts.getContactByIdAsync(userId, [Contacts.Fields.RawImage, Contacts.Fields.PhoneNumbers])
+    Contacts.getContactByIdAsync(userId, [Contacts.Fields.RawImage, Contacts.Fields.PhoneNumbers, Contacts.Fields.Emails])
       .then((data) => {
         if (data) {
           setContact(data);
