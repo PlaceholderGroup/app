@@ -1,7 +1,7 @@
-import Avatar from "@/components/Avatar";
 import PhoneNumbers from "@/components/PhoneNumbers";
 import { Button, StyleSheet, Text, View } from "react-native";
 
+import ProfileCarousel from "@/components/ProfileCarousel";
 import * as Contacts from "expo-contacts";
 import { shareContact } from "./NFC";
 
@@ -16,7 +16,7 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
                 {
                     (contact) &&
                     <>
-                        <Avatar source={contact.image?.uri} size={192} name={contact.name} />
+                        <ProfileCarousel contact={contact} />
                         <Text style={styles.name}>{contact.name}</Text>
                     </>
                 }
@@ -46,7 +46,8 @@ const styles = StyleSheet.create({
         alignItems: "center",
         gap: 20,
         backgroundColor: "white",
-        padding: 20,
+        paddingTop: 20,
+        paddingBottom: 20,
         borderBottomWidth: 1,
         borderColor: "lightgray",
     },
