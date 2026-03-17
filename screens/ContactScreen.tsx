@@ -1,7 +1,8 @@
 import Avatar from "@/components/Avatar";
 import PhoneNumbers from "@/components/PhoneNumbers";
-import { Button, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
+import Button from "@/components/Button";
 import * as Contacts from "expo-contacts";
 import { shareContact } from "./NFC";
 
@@ -15,6 +16,13 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
                     <>
                         <Avatar source={contact.image?.uri} size={192} name={contact.name} />
                         <Text style={styles.name}>{contact.name}</Text>
+                        <View style={styles.buttons}>
+                            <Button icon="phone" />
+                            <Button icon="chat-bubble" />
+                            <Button icon="videocam" />
+                            <Button icon="email" />
+                        </View>
+                        <Button title="Share Contact" icon="share" type="tertiary" style={styles.shareButton} onPress={() => shareContact(contact)}  />
                     </>
                 }
             </View>
@@ -23,7 +31,6 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
                     (contact?.phoneNumbers) &&
                     <PhoneNumbers phoneNumbers={contact.phoneNumbers} />
                 }
-                <Button title="Share Contact" onPress={() => shareContact(contact)}  />
             </View>
         </>
 
@@ -53,7 +60,19 @@ const styles = StyleSheet.create({
         borderRadius: 96,
     },
     name: {
-        fontSize: 36,
+        fontSize: 32,
         fontWeight: 500,
-    }
+        fontFamily: "Lexend_500Medium",
+    },
+    buttons: {
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "flex-start",
+        gap: 20,
+        alignSelf: "stretch",
+    },
+    shareButton: {
+        alignSelf: "stretch"
+    },
 });
