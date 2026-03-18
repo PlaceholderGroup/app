@@ -17,6 +17,8 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
                     <>
                         <Avatar source={contact.image?.uri} size={192} name={contact.name} />
                         <Text style={styles.name}>{contact.name}</Text>
+
+                        {/* TODO: These need to be based on the primary phone/email, not just the first one. */}
                         <View style={styles.buttons}>
                             <Button icon="phone" disabled={!contact.phoneNumbers} onPress={() => {
                                 contact.phoneNumbers?.[0]?.number && openLink(contact.phoneNumbers?.[0]?.number, "tel");

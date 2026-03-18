@@ -2,6 +2,7 @@ import { Lexend_400Regular, Lexend_500Medium, useFonts } from "@expo-google-font
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { SplashScreen, Tabs } from "expo-router";
 
+import Navbar from "@/components/Navbar";
 import * as Contacts from "expo-contacts";
 import { useEffect, useState } from "react";
 import ContactsContext from "../../contexts/ContactsContext";
@@ -37,6 +38,7 @@ export default function RootLayout() {
 
   return (
     <ContactsContext value={contacts}>
+      <Navbar/>
       <Tabs screenOptions={{ headerShown: false }}>
         <Tabs.Screen
           name="index"

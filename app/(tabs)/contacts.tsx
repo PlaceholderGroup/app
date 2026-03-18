@@ -1,9 +1,9 @@
 import { FlatList } from "react-native";
 
+import ContactsListitem from "@/components/ContactsListItem";
+import TabsSafeAreaView from "@/components/TabsSafeAreaView";
+import ContactsContext from "@/contexts/ContactsContext";
 import { useContext } from "react";
-import ContactsListitem from "../../components/ContactsListItem";
-import TabsSafeAreaView from "../../components/TabsSafeAreaView";
-import ContactsContext from "../../contexts/ContactsContext";
 
 export default function ContactsScreen() {
 
