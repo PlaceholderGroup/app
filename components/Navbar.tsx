@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: "#CCCCCC",
         paddingHorizontal: 10,
-        paddingVertical: 4,
+        paddingBottom: 4,
         gap: 20,
     },
     spacer: {

@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import ContactsContext from "@/contexts/ContactsContext";
+import { CONTACT_FIELDS } from "@/utils/contacts";
 import { Lexend_400Regular, Lexend_500Medium, useFonts } from "@expo-google-fonts/lexend";
 import { DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import * as Contacts from "expo-contacts";
@@ -36,7 +37,7 @@ export default function RootLayout() {
             if (status === 'granted') {
                 const { data } = await Contacts.getContactsAsync({
                     sort: Contacts.SortTypes.FirstName,
-                    fields: [Contacts.Fields.Name]
+                    fields: CONTACT_FIELDS
                 });
                 setContacts(data);
 

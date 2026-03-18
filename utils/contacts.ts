@@ -1,6 +1,6 @@
 import * as Contacts from "expo-contacts";
 
-const CONTACT_FIELDS = [
+export const CONTACT_FIELDS = [
     Contacts.Fields.RawImage,
     Contacts.Fields.PhoneNumbers,
     Contacts.Fields.Emails,
