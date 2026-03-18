@@ -3,6 +3,7 @@ import PhoneNumbers from "@/components/PhoneNumbers";
 import { StyleSheet, Text, View } from "react-native";
 
 import Button from "@/components/Button";
+import TabsSafeAreaView from "@/components/TabsSafeAreaView";
 import { openLink } from "@/utils/link";
 import * as Contacts from "expo-contacts";
 import { shareContact } from "../utils/NFC";
@@ -10,7 +11,7 @@ import { shareContact } from "../utils/NFC";
 
 export default function ContactScreen({ contact }: { contact: Contacts.ExistingContact }) {
     return (
-        <>
+        <TabsSafeAreaView>
             <View style={styles.head}>
                 {
                     (contact) &&
@@ -43,7 +44,7 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
                     <PhoneNumbers phoneNumbers={contact.phoneNumbers} />
                 }
             </View>
-        </>
+        </TabsSafeAreaView>
 
     );
 }
@@ -55,15 +56,11 @@ const styles = StyleSheet.create({
         gap: 20,
         // NOTE: This background color comes from the default tabs navigator (I think) a similar default color is "whitesmoke" 
         // although I'm sure at some point we will want to come in with our own colors
-        backgroundColor: "rgb(242, 242, 242)",
     },
     head: {
         alignItems: "center",
         gap: 20,
-        backgroundColor: "white",
         padding: 20,
-        borderBottomWidth: 1,
-        borderColor: "lightgray",
     },
     avatar: {
         width: 192,

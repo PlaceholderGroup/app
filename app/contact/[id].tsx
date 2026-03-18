@@ -1,32 +1,23 @@
 import ContactScreen from "@/screens/ContactScreen";
+import { getContact } from "@/utils/contacts";
 import * as Contacts from "expo-contacts";
 
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { StyleSheet, View } from "react-native";
 
 export default function Contact() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const [contact, setContact] = useState<Contacts.ExistingContact>();
 
-    function getContact(userId: string) {
-        Contacts.getContactByIdAsync(userId, [Contacts.Fields.RawImage, Contacts.Fields.PhoneNumbers])
-            .then((data) => {
-                if (data) {
-                    setContact(data);
-                }
-            });
-    }
-
     useEffect(() => {
-        getContact(id);
+        getContact(id, setContact);
     }, [id]);
 
     return (
-        <SafeAreaView style={styles.body}>
+        <View style={styles.body}>
             {(contact) && <ContactScreen contact={contact} />}
-        </SafeAreaView>
+        </View>
     );
 }
 

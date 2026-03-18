@@ -22,8 +22,23 @@ export async function openLink(data: string, type: LinkType): Promise<boolean> {
                 ios: `facetime:${data}`,
                 android: `tel:${data}`,
             }) || "";
-            
+
             // TODO: Get this working on Android
+
+            // url = `facetime:${data}`;
+            // const cleanData = data.replaceAll(/\D/g, "");
+            // console.log(cleanData);
+            // try {
+            //     await IntentLauncher.startActivityAsync("com.android.phone.videocall", {
+            //         data,
+            //         extra: {
+            //             videoCall: true,
+            //         }
+            //     });
+            // } catch (error) {
+            //     console.log(error);
+            // }
+
             // console.log(data.replaceAll(/\D/g, ""));
             // Linking.sendIntent("com.android.phone.videocall", [
             //     {

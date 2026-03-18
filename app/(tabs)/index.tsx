@@ -1,10 +1,10 @@
-import TabsSafeAreaView from "@/components/TabsSafeAreaView";
 
 
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import ContactScreen from "@/screens/ContactScreen";
+import { getContact } from "@/utils/contacts";
 import * as Contacts from "expo-contacts";
 import * as SecureStore from "expo-secure-store";
 
@@ -15,20 +15,11 @@ export default function Index() {
 
   const [contact, setContact] = useState<Contacts.ExistingContact>();
 
-  function getContact(userId: string) {
-    Contacts.getContactByIdAsync(userId, [Contacts.Fields.RawImage, Contacts.Fields.PhoneNumbers, Contacts.Fields.Emails])
-      .then((data) => {
-        if (data) {
-          setContact(data);
-        }
-      });
-  }
-
   useEffect(() => {
     (async () => {
       let userId = await SecureStore.getItemAsync("userId");
       if (userId) {
-        getContact(userId);
+        getContact(userId, setContact);
       } else {
         Contacts.presentContactPickerAsync()
           .then((data) => {
@@ -36,7 +27,7 @@ export default function Index() {
               SecureStore.setItemAsync("userId", data.id);
               // NOTE: We don't use the returned contact info directly because (at least in my testing
               // so far on Android) it returns a lower quality contact photo
-              getContact(data.id);
+              getContact(data.id, setContact);
             }
           });
       }
@@ -44,11 +35,9 @@ export default function Index() {
   }, []);
 
   return (
-    <TabsSafeAreaView>
-      <View style={styles.body}>
-        {(contact) && <ContactScreen contact={contact} />}
-      </View>
-    </TabsSafeAreaView>
+    <View style={styles.body}>
+      {(contact) && <ContactScreen contact={contact} />}
+    </View>
   );
 }
 

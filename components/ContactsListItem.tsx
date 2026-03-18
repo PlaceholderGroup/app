@@ -30,6 +30,6 @@ const styles = StyleSheet.create({
         gap: 20,
         alignItems: "center",
         paddingHorizontal: 10,
-        paddingVertical: 5
+        paddingVertical: 5,
     },
 })
