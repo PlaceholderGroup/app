@@ -19,3 +19,9 @@ export async function getContact(
         setContact(data);
     }
 }
+
+export function editContact(id: string | undefined) {
+    if (id) {
+        Contacts.presentFormAsync(id);
+    }
+}

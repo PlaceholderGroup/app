@@ -1,5 +1,5 @@
 import Navbar from "@/components/Navbar";
-import ContactsContext from "@/contexts/ContactsContext";
+import { ContactsProvider } from "@/contexts/ContactsContext";
 import { CONTACT_FIELDS } from "@/utils/contacts";
 import { Lexend_400Regular, Lexend_500Medium, useFonts } from "@expo-google-fonts/lexend";
 import { DefaultTheme, ThemeProvider } from "@react-navigation/native";
@@ -46,7 +46,7 @@ export default function RootLayout() {
     }, [])
 
     return (
-        <ContactsContext value={contacts}>
+        <ContactsProvider data={contacts}>
             <StatusBar style="dark" />
             <ThemeProvider value={Theme}>
                 <Stack screenOptions={{
@@ -60,6 +60,6 @@ export default function RootLayout() {
                     <Stack.Screen name="contact/[id]" />
                 </Stack>
             </ThemeProvider>
-        </ContactsContext >
+        </ContactsProvider>
     )
 }

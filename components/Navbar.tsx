@@ -1,4 +1,7 @@
 import Button from "@/components/Button";
+import { ContactsContext } from "@/contexts/ContactsContext";
+import { editContact } from "@/utils/contacts";
+import { useContext } from "react";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -8,17 +11,23 @@ type NavbarProps = {
 }
 
 export default function Navbar({ canGoBack, onBack }: NavbarProps) {
+    const { currentContact } = useContext(ContactsContext);
+
     return (
-        <SafeAreaView edges={["top", "left", "right"]} style={styles.conatiner}>
+        <SafeAreaView edges={["top", "left", "right"]} style={styles.container}>
             {canGoBack && <Button icon="arrow-back-ios-new" type="tertiary" onPress={onBack} />}
             <View style={styles.spacer} />
-            <Button icon="edit" type="tertiary" />
+            {currentContact !== undefined && (
+                <Button icon="edit" type="tertiary" onPress={() => {
+                    editContact(currentContact);
+                }} />
+            )}
         </SafeAreaView>
     )
 }
 
 const styles = StyleSheet.create({
-    conatiner: {
+    container: {
         display: "flex",
         flexDirection: "row",
         backgroundColor: "rgba(255, 255, 255, 0.50)",

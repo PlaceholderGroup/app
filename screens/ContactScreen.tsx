@@ -4,12 +4,25 @@ import { StyleSheet, Text, View } from "react-native";
 
 import Button from "@/components/Button";
 import TabsSafeAreaView from "@/components/TabsSafeAreaView";
+import { ContactsContext } from "@/contexts/ContactsContext";
 import { openLink } from "@/utils/link";
 import * as Contacts from "expo-contacts";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useContext } from "react";
 import { shareContact } from "../utils/NFC";
 
 
 export default function ContactScreen({ contact }: { contact: Contacts.ExistingContact }) {
+
+    const { setCurrentContact } = useContext(ContactsContext);
+
+    useFocusEffect(
+        useCallback(() => {
+            setCurrentContact(contact.id);
+            return () => setCurrentContact(undefined);
+        }, [contact.id])
+    );
+
     return (
         <TabsSafeAreaView>
             <View style={styles.head}>
