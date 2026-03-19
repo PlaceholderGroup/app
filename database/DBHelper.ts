@@ -9,7 +9,7 @@ interface SocialObj{
     link: string
 }
 interface ContactObj{
-    contact_code:string,
+    contact:Contacts.ExistingContact | undefined,
     is_favorite:boolean | Promise<boolean>,
     social_Objs?:Array<SocialObj> | Promise<Array<SocialObj>>
 }
@@ -50,16 +50,19 @@ async createSocialObj(contactCode:string, socialField:string, link:string):Promi
 }
 
 //GET
-async getContactObj(contact_code:string):Promise<Contacts.ExistingContact | string> {
-    const result = await Contacts.getContactByIdAsync(contact_code)
+async getContactObj(contact_code:string):Promise<ContactObj | string> {
+    const result:ContactObj = {
+        contact:await Contacts.getContactByIdAsync(contact_code),
+        is_favorite: await this.getIsFavorite(contact_code) 
+    }
     if(!result){
         return 'No existing contact'
     }
-    //  ContactObj = {
-    //     contact_code: contact_code,
-    //     is_favorite: await this.getIsFavorite(contact_code),
-    //     social_Objs: await this.getSocialFields(contact_code)
-    // }
+     ContactObj = {
+        contact_code: contact_code,
+        is_favorite: await this.getIsFavorite(contact_code),
+        social_Objs: await this.getSocialFields(contact_code)
+    }
 
     return result
 }
@@ -69,6 +72,7 @@ async getContactObj(contact_code:string):Promise<Contacts.ExistingContact | stri
 //get single social field
 async getSocialObj(contactCode:string, socialField:string){
     const result = await this.getSingleSocialField(contactCode,socialField)
+    return result
 }
 //get all social fields associated with a contact
 async getAllSocialObj(contactCode:string):Promise<Array<SocialObj>>{
@@ -141,6 +145,11 @@ async deleteSocialObj(contactCode:string, socialField:string):Promise<number>{
             FOREIGN KEY (contact_code) REFERENCES contacts(id) ON DELETE CASCADE,
             social_field TEXT NOT NULL,
             link TEXT NOT NULL
+            )`,
+            `CREATE TABLE IF NOT EXISTS personal_fields(
+            profile_name TEXT NOT null,
+            field_name TEXT NOT NULL,
+            field_value TEXT NOT NULL
             )`
         ]
         try{
@@ -163,6 +172,55 @@ async deleteSocialObj(contactCode:string, socialField:string):Promise<number>{
         }
     }
 
+    private async createPersonal(profile:string, fieldName:string, fieldValue:string): Promise<string>{
+        const query = `INSERT INTO personal_fields (profile, fieldName, fieldValue) VALUES (?, ?, ?) RETURNING profile_name`;
+        try{
+            const result = await this.db!.getFirstAsync<{profile:string}>(query, profile, fieldName, fieldValue)
+            if(!result){
+                throw new Error('Failed to create new personal: No result returned.');
+            }
+            return result.profile
+        }catch(error){
+            console.log('Error when creating new personal: ', error);
+            throw(error)
+        }
+    }
+    private async updatePersonal(profile:string, fieldName:string, fieldValue:string): Promise<number>{
+        const query = `UPDATE personal_fields SET field_value = ? WHERE profile = ? AND field_name = ?`;
+        try{
+            const result = await this.db!.runAsync(query, [fieldValue, profile, fieldName]);
+            console.log('Rows affected:', result.changes);
+            return result.changes;
+        }catch(error){
+            console.log('Error when creating new personal: ', error);
+            throw(error)
+        }
+    }
+
+    private async deletePersonal(profile:string, fieldName:string): Promise<number>{
+        const query = `DELETE FROM personal_fields WHERE profile = ? AND field_name = ?`;
+        try{
+            const result = await this.db!.runAsync(query, [profile, fieldName]);
+            return result.changes;
+        }catch(error){
+            console.log('Error when deleting personal field: ', error);
+            throw(error)
+        }
+    }
+
+    private async readPersonal(profile:string, fieldName:string): Promise<string>{
+        const query = `SELECT field_value FROM personal_fields WHERE profile = ? and field_name = ?`;
+        try{
+            const result = await this.db!.getFirstAsync<string>(query, [profile, fieldName])
+            if(!result){
+                throw new Error('Failed to retrieve personal field: No result returned.');
+            }
+            return result
+        }catch(error){
+            console.log('Error when retrieving personal field: ', error);
+            throw(error)
+        }
+    }
     //CREATE:
 
     private async createContact (contact_code:string): Promise<string> {
