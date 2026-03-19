@@ -1,12 +1,13 @@
 import Navbar from "@/components/Navbar";
 import { ContactsProvider } from "@/contexts/ContactsContext";
-import { CONTACT_FIELDS } from "@/utils/contacts";
+import { getContacts } from "@/utils/contacts";
 import { Lexend_400Regular, Lexend_500Medium, useFonts } from "@expo-google-fonts/lexend";
 import { DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import * as Contacts from "expo-contacts";
 import { SplashScreen, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { AppState } from "react-native";
 
 const Theme = {
     ...DefaultTheme,
@@ -20,6 +21,8 @@ export default function RootLayout() {
 
     const [contacts, setContacts] = useState<Array<Contacts.ExistingContact>>([]);
 
+    const appState = useRef(AppState.currentState);
+
     const [loaded, error] = useFonts({
         Lexend_400Regular,
         Lexend_500Medium,
@@ -32,18 +35,27 @@ export default function RootLayout() {
     }, [loaded, error]);
 
     useEffect(() => {
-        (async () => {
-            const { status } = await Contacts.requestPermissionsAsync();
-            if (status === 'granted') {
-                const { data } = await Contacts.getContactsAsync({
-                    sort: Contacts.SortTypes.FirstName,
-                    fields: CONTACT_FIELDS
-                });
-                setContacts(data);
+        getContacts(setContacts);
+    }, []);
 
+    // TODO: This won't work if we end up getting our own edit contact functionality, 
+    // but for now it's fine
+    // TODO: I also don't like that it is duplicated over 3 different files
+    useEffect(() => {
+        const subscription = AppState.addEventListener("change", (nextAppState) => {
+            if (
+                appState.current.match(/inactive|background/) &&
+                nextAppState === "active"
+            ) {
+                getContacts(setContacts);
             }
-        })();
-    }, [])
+
+            appState.current = nextAppState;
+        });
+        return () => {
+            subscription.remove();
+        };
+    }, []);
 
     return (
         <ContactsProvider data={contacts}>

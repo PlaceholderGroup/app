@@ -1,7 +1,5 @@
-
-
-import { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { AppState, StyleSheet, View } from "react-native";
 
 import ContactScreen from "@/screens/ContactScreen";
 import { getContact } from "@/utils/contacts";
@@ -14,6 +12,8 @@ import * as SecureStore from "expo-secure-store";
 export default function Index() {
 
   const [contact, setContact] = useState<Contacts.ExistingContact>();
+
+  const appState = useRef(AppState.currentState);
 
   useEffect(() => {
     (async () => {
@@ -33,6 +33,27 @@ export default function Index() {
       }
     })();
   }, []);
+
+  // TODO: This won't work if we end up getting our own edit contact functionality, 
+  // but for now it's fine
+  // TODO: I also don't like that it is duplicated over 3 different files
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === "active"
+      ) {
+        if (contact) {
+          getContact(contact.id, setContact);
+        }
+      }
+
+      appState.current = nextAppState;
+    });
+    return () => {
+      subscription.remove();
+    };
+  }, [contact]);
 
   return (
     <View style={styles.body}>
