@@ -18,14 +18,15 @@ export class DBHelper {
 
 //getters/setters/deleter for contact object meant to be publicly accessible:
 //CREATE
-async createContactObj(incomingContact: Contacts.Contact, contactCode:string):Promise<Contacts.Contact> {
+async createContactObj(incomingContact: Contacts.Contact):Promise<Contacts.Contact> {
     
-    
+    const contactCode = await Contacts.addContactAsync(incomingContact)
+
     await this.createContact(contactCode)
     if(incomingContact.isFavorite){
         await this.createIsFavorite(contactCode)
     }
-    Contacts.addContactAsync(incomingContact)
+    
     const result = incomingContact
         // ContactObj={
         // contact_code: contactCode,
