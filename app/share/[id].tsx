@@ -1,11 +1,12 @@
 import Avatar from "@/components/Avatar";
 import TabsSafeAreaView from "@/components/TabsSafeAreaView";
-import { getContact } from "@/utils/contacts";
+import { getContact, toVCard } from "@/utils/contacts";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as Contacts from "expo-contacts";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { Platform, StyleSheet, Text, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import QRCode from "react-qr-code";
 
 
 export default function Sharing() {
@@ -18,34 +19,42 @@ export default function Sharing() {
     }, [id]);
 
     return (
-        <TabsSafeAreaView>
-            <View style={styles.sharingContainer}>
-                {contact &&
-                    <View style={styles.contactPreview}>
-                        <Avatar name={contact.name} size={64} source={contact.image?.uri} />
-                        <Text style={styles.previewText}>
-                            Sharing <Text style={styles.namePreview}>{contact.name}</Text>
-                        </Text>
+        // TODO: I don't like listing this manually here. That's what creating the TabsSafeAreaView component was supposed to avoid
+        <TabsSafeAreaView edges={["bottom", "left", "right"]}>
+            <ScrollView contentContainerStyle={styles.scrollView}>
+                <View style={styles.sharingContainer}>
+                    {contact &&
+                        <View style={styles.contactPreview}>
+                            <Avatar name={contact.name} size={64} source={contact.image?.uri} />
+                            <Text style={styles.previewText}>
+                                Sharing <Text style={styles.namePreview}>{contact.name}</Text>
+                            </Text>
+                        </View>
+                    }
+                    <View style={styles.qrContainer}>
+                        {contact && <QRCode value={toVCard(contact)} size={220} style={styles.qrContainer} />}
                     </View>
-                }
-                <View style={styles.qrContainer}></View>
-                <View style={styles.sharePrompt}>
-                    {Platform.OS === "android" && <MaterialIcons name="contactless" size={24} />}
-                    <Text style={styles.previewText}>{Platform.select({ ios: "Scan", android: "Tap or scan" })} to receive</Text>
-                </View>
+                    <View style={styles.sharePrompt}>
+                        {Platform.OS === "android" && <MaterialIcons name="contactless" size={24} />}
+                        <Text style={styles.previewText}>{Platform.select({ ios: "Scan", android: "Tap or scan" })} to receive</Text>
+                    </View>
 
-            </View>
-            <View style={styles.quickShare}>
-                <View style={styles.quickShareText}>
-                    <Text style={styles.quickShareLabel}>Quick Share</Text>
-                    <Text style={styles.quickSharePrompt}>Select someone from below to share with.</Text>
                 </View>
-            </View>
+                <View style={styles.quickShare}>
+                    <View style={styles.quickShareText}>
+                        <Text style={styles.quickShareLabel}>Quick Share</Text>
+                        <Text style={styles.quickSharePrompt}>Select someone from below to share with.</Text>
+                    </View>
+                </View>
+            </ScrollView>
         </TabsSafeAreaView>
     )
 };
 
 const styles = StyleSheet.create({
+    scrollView: {
+        flexGrow: 1,
+    },
     sharingContainer: {
         display: "flex",
         paddingHorizontal: 20,
@@ -74,6 +83,9 @@ const styles = StyleSheet.create({
     qrContainer: {
         width: 250,
         height: 250,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
         backgroundColor: "#FFFFFF",
         aspectRatio: "1/1",
         borderColor: "#CCCCCC",
