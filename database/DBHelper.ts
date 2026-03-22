@@ -1,400 +1,403 @@
 import * as Contacts from "expo-contacts";
 import * as SQLite from 'expo-sqlite';
-
-
-
-//define interfaces for data-types and the values they hold
-interface SocialObj{
+import { Platform } from "react-native";
+ 
+interface SocialObj {
     social_field: string,
-    link: string
+    link: string,
+    service: string
 }
-interface ContactObj{
-    contact:Contacts.ExistingContact | undefined,
-    is_favorite:boolean | Promise<boolean>,
-    social_Objs?:Array<SocialObj> | Promise<Array<SocialObj>>
+ 
+interface profileObj {
+    profileID: string | Promise<string>,
+    profileName: string | Promise<string>,
+    icon: string | Promise<string>,
+    pictureLink: string | Promise<string>,
+    contact: Contacts.ExistingContact | Promise<Contacts.ExistingContact>
 }
-
+ 
 export class DBHelper {
-
-//getters/setters/deleter for contact object meant to be publicly accessible:
-//CREATE
-async createContactObj(incomingContact: Contacts.Contact):Promise<Contacts.Contact> {
-    
-    const contactCode = await Contacts.addContactAsync(incomingContact)
-
-    await this.createContact(contactCode)
-    if(incomingContact.isFavorite){
-        await this.createIsFavorite(contactCode)
-    }
-    
-    const result = incomingContact
-        // ContactObj={
-        // contact_code: contactCode,
-        // is_favorite: isFavorite,
-        // social_Objs:socialObjs
-
-    
-    if(incomingContact.socialProfiles){
-        for(const object of incomingContact.socialProfiles){
-            if (object.service && object.url){
-            await this.createSocialObj(contactCode, object.service, object.url)
+ 
+    // -------------------------------------------------------------------------
+    // PUBLIC API
+    // -------------------------------------------------------------------------
+ 
+    async getContactObj(id: string, fields: Contacts.FieldType[]): Promise<Contacts.ExistingContact | undefined> {
+        const contact = await Contacts.getContactByIdAsync(id, fields);
+ 
+        if (contact) {
+            if (Platform.OS !== "ios") {
+                const socialProfiles = await this.getAllSocialObj(id);
+                if (socialProfiles) {
+                    contact.socialProfiles = socialProfiles.map((i): Contacts.SocialProfile => ({
+                        label: i.social_field,
+                        service: i.service,
+                        url: i.link
+                    }));
+                }
+            }
+            if (Platform.OS !== "android") {
+                const isFavorite = await this.getIsFavorite(id);
+                if (isFavorite) {
+                    contact.isFavorite = isFavorite;
+                }
             }
         }
+ 
+        return contact;
     }
-    return result
-}
-
-async createSocialObj(contactCode:string, socialField:string, link:string):Promise<SocialObj> {
-    await this.createSocialFields(contactCode, socialField, link)
-    const result : SocialObj =  {social_field:socialField, link : link}
-    return result
-}
-
-//GET
-async getContactObj(contact_code:string):Promise<ContactObj | string> {
-    const result:ContactObj = {
-        contact:await Contacts.getContactByIdAsync(contact_code),
-        is_favorite: await this.getIsFavorite(contact_code) 
-    }
-    if(!result){
-        return 'No existing contact'
-    }
-     ContactObj = {
-        contact_code: contact_code,
-        is_favorite: await this.getIsFavorite(contact_code),
-        social_Objs: await this.getSocialFields(contact_code)
+ 
+    async createContactObj(incomingContact: Contacts.Contact): Promise<Contacts.Contact> {
+        const result = incomingContact;
+        const contactCode = await Contacts.addContactAsync(incomingContact);
+ 
+        await this.createContact(contactCode);
+ 
+        if (incomingContact.isFavorite) {
+            await this.createIsFavorite(contactCode);
+        }
+ 
+        if (incomingContact.socialProfiles) {
+            for (const object of incomingContact.socialProfiles) {
+                if (object.service && object.url) {
+                    await this.createSocialFields(contactCode, object.label, object.service, object.url);
+                }
+            }
+        }
+ 
+        return result;
     }
 
-    return result
-}
+    async updateContactObj(){
 
-// CURRENT PROGRESS ENDS HERE FOR UPDATING TO USING EXPO CONTACTS!!!!
+    }
 
-//get single social field
-async getSocialObj(contactCode:string, socialField:string){
-    const result = await this.getSingleSocialField(contactCode,socialField)
-    return result
-}
-//get all social fields associated with a contact
-async getAllSocialObj(contactCode:string):Promise<Array<SocialObj>>{
-    const result = await this.getSocialFields(contactCode)
-    return result
-}
+    async deleteContactObj(contact_code: string): Promise<number> {
+        return this.deleteContact(contact_code);
+    }
 
-//UPDATE
-async updateSocialObj(contactCode:string, oldSocialField:string, newSocialField:string, link:string):Promise<SocialObj>{
-    await this.updateSocialField(contactCode,oldSocialField,newSocialField,link)
-    const result = this.getSingleSocialField(contactCode,newSocialField)
-    return result
+    async createProfileObj(contact_code: string, name: string, icon: string, picture_link : string): Promise<profileObj>{
 
-}
-// async updateContactObj(contact_code:string, is_favorite:boolean, social_fields:Array<SocialObj>):Promise<ContactObj>{
-//     for(let i = 0; i < social_fields.length; i++ )
-//         await this.updateSocialFields(contact_code, social_fields[i].social_field, social_fields[i].link)
-//     if(is_favorite){
-//         await this.createIsFavorite(contact_code);
-//     }else{
-//         await this.deleteIsFavorite(contact_code);
-//     }
-//     const result = this.getContactObj(contact_code)
-//     return result
-//}
-//DELETE
-async deleteContactObj(contact_code:string):Promise<number>{
-    const result = this.deleteContact(contact_code)
-    return result
-}
 
-async deleteSocialObj(contactCode:string, socialField:string):Promise<number>{
-    const result = this.deleteSocialField(contactCode,socialField)
-    return result
-}
+    }
 
-//PRIVATE FUNCTIONS
+    async readProfileObj(){
+
+    }
+
+    async updateProfileObj(){
+
+    }
+
+    async deleteProfileObj(){
+
+    }
+ 
+    async createSocialObj(contactCode: string, label: string, service: string, link: string): Promise<Contacts.SocialProfile> {
+        await this.createSocialFields(contactCode, label, service, link);
+        const result: Contacts.SocialProfile = { label: label, url: link };
+        return result;
+    }
+ 
+    async getSocialObj(contactCode: string, socialField: string) {
+        return await this.getSingleSocialField(contactCode, socialField);
+    }
+ 
+    async getAllSocialObj(contactCode: string): Promise<Array<SocialObj>> {
+        return await this.getSocialFields(contactCode);
+    }
+ 
+    async updateSocialObj(contactCode: string, oldSocialField: string, newSocialField: string, link: string): Promise<SocialObj> {
+        await this.updateSocialField(contactCode, oldSocialField, newSocialField, link);
+        return this.getSingleSocialField(contactCode, newSocialField);
+    }
+ 
+
+ 
+    async deleteSocialObj(contactCode: string, socialField: string): Promise<number> {
+        return this.deleteSocialField(contactCode, socialField);
+    }
+ 
+    // -------------------------------------------------------------------------
+    // PRIVATE: DB Setup
+    // -------------------------------------------------------------------------
+ 
     private db: SQLite.SQLiteDatabase | null;
-    constructor(){
+ 
+    constructor() {
         this.db = null;
     }
-
+ 
     private async initDB(): Promise<void> {
-        try {this.db = await SQLite.openDatabaseAsync('contactsDB.db');
-
-            await this.db.execAsync('PRAGMA foreign_keys = ON;')
-            console.log('DB created successfully.')
+        try {
+            this.db = await SQLite.openDatabaseAsync('contactsDB.db');
+            await this.db.execAsync('PRAGMA foreign_keys = ON;');
+            console.log('DB created successfully.');
             await this.createTables();
-        }
-        catch(error){
+        } catch (error) {
             console.log('Error when creating DB: ', error);
-            throw(error);
+            throw error;
         }
     }
-    
-
-
  
     private async createTables(): Promise<void> {
         const queries: string[] = [
             `CREATE TABLE IF NOT EXISTS contacts(
-            contact_code TEXT PRIMARY KEY,
+                contact_code TEXT PRIMARY KEY
             )`,
             `CREATE TABLE IF NOT EXISTS is_favorite(
-            contact_code TEXT UNIQUE NOT NULL,
-            FOREIGN KEY (contact_code) REFERENCES contacts(contact_code) ON DELETE CASCADE,
+                contact_code TEXT UNIQUE NOT NULL,
+                FOREIGN KEY (contact_code) REFERENCES contacts(contact_code) ON DELETE CASCADE
             )`,
             `CREATE TABLE IF NOT EXISTS social_fields(
-            contact_code TEXT NOT NULL,
-            FOREIGN KEY (contact_code) REFERENCES contacts(id) ON DELETE CASCADE,
-            social_field TEXT NOT NULL,
-            link TEXT NOT NULL
+                contact_code TEXT NOT NULL,
+                label TEXT NOT NULL,
+                service TEXT NOT NULL,
+                link TEXT NOT NULL,
+                FOREIGN KEY (contact_code) REFERENCES contacts(contact_code) ON DELETE CASCADE
             )`,
-            `CREATE TABLE IF NOT EXISTS personal_fields(
-            profile_name TEXT NOT null,
-            field_name TEXT NOT NULL,
-            field_value TEXT NOT NULL
+            `CREATE TABLE IF NOT EXISTS profiles(
+                profile_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                contact_code TEXT NOT NULL,
+                name TEXT NOT NULL,
+                icon TEXT,
+                picture_link TEXT,
+                FOREIGN KEY (contact_code) REFERENCES contacts(contact_code) ON DELETE CASCADE
+            )`,
+
+            `CREATE TABLE IF NOT EXISTS fields(
+                profile_id INTEGER NOT NULL,
+                field_name TEXT NOT NULL,
+                FOREIGN KEY (profile_id) REFERENCES profiles(profile_id) ON DELETE CASCADE
             )`
-        ]
-        try{
-            for(const query of queries){
+        ];
+        try {
+            for (const query of queries) {
                 await this.db!.execAsync(query);
             }
             console.log('Tables created successfully.');
-        }catch(error){
+        } catch (error) {
             console.log('Error when creating tables: ', error);
-            throw(error);
+            throw error;
         }
     }
-
-    //close db for testing
+ 
     private async closeDB(): Promise<void> {
-        if(this.db){
-            this.db.closeAsync();
+        if (this.db) {
+            await this.db.closeAsync();
             this.db = null;
-            console.log('DB closed successfully.')
+            console.log('DB closed successfully.');
         }
+    }
+    // -------------------------------------------------------------------------
+    // PRIVATE: fields table
+    // -------------------------------------------------------------------------
+    private async createFields(profile_id: number, field_name: string): Promise<string>{
+        const query = `INSERT INTO profiles`
     }
 
-    private async createPersonal(profile:string, fieldName:string, fieldValue:string): Promise<string>{
-        const query = `INSERT INTO personal_fields (profile, fieldName, fieldValue) VALUES (?, ?, ?) RETURNING profile_name`;
-        try{
-            const result = await this.db!.getFirstAsync<{profile:string}>(query, profile, fieldName, fieldValue)
-            if(!result){
-                throw new Error('Failed to create new personal: No result returned.');
-            }
-            return result.profile
-        }catch(error){
-            console.log('Error when creating new personal: ', error);
-            throw(error)
+
+    // -------------------------------------------------------------------------
+    // PRIVATE: profiles table
+    // -------------------------------------------------------------------------
+ 
+    private async createProfile(contact_code: string, name: string, icon: string, picture_link : string): Promise<profileObj> {
+        const query = `INSERT INTO profiles (contact_code, name, icon, picture_link) VALUES (?, ?, ?, ?) RETURNING name`;
+        try {
+            const result = await this.db!.getFirstAsync<{ name: profileObj }>(query, contact_code, name, icon, picture_link);
+            if (!result) throw new Error('Failed to create profile: No result returned.');
+            return result.name;
+        } catch (error) {
+            console.log('Error when creating profile: ', error);
+            throw error;
         }
     }
-    private async updatePersonal(profile:string, fieldName:string, fieldValue:string): Promise<number>{
-        const query = `UPDATE personal_fields SET field_value = ? WHERE profile = ? AND field_name = ?`;
-        try{
-            const result = await this.db!.runAsync(query, [fieldValue, profile, fieldName]);
+ 
+    private async readProfile(contact_code: string, profile_id: number): Promise<profileObj> {
+        const query = `SELECT * FROM profiles WHERE contact_code = ? AND profile_id = ?`;
+        try {
+            const result = await this.db!.getFirstAsync<profileObj>(query, [contact_code, profile_id]);
+            if (!result) throw new Error('Failed to retrieve profile.');
+            return result;
+        } catch (error) {
+            console.log('Error when retrieving profile: ', error);
+            throw error;
+        }
+    }
+ 
+    private async updateProfile(profile_id: number, name: string, icon: string, picture_link : string): Promise<number> {
+        const query = `UPDATE profiles SET name = ? AND icon = ? AND picture_link = ? WHERE profile_id = ?`;
+        try {
+            const result = await this.db!.runAsync(query, [name, icon, picture_link, profile_id]);
             console.log('Rows affected:', result.changes);
             return result.changes;
-        }catch(error){
-            console.log('Error when creating new personal: ', error);
-            throw(error)
+        } catch (error) {
+            console.log('Error when updating profile: ', error);
+            throw error;
         }
     }
-
-    private async deletePersonal(profile:string, fieldName:string): Promise<number>{
-        const query = `DELETE FROM personal_fields WHERE profile = ? AND field_name = ?`;
-        try{
-            const result = await this.db!.runAsync(query, [profile, fieldName]);
+ 
+    private async deleteProfile(profile_id: number): Promise<number> {
+        const query = `DELETE FROM profiles WHERE profile_id = ?`;
+        try {
+            const result = await this.db!.runAsync(query, [profile_id]);
             return result.changes;
-        }catch(error){
-            console.log('Error when deleting personal field: ', error);
-            throw(error)
+        } catch (error) {
+            console.log('Error when deleting profile: ', error);
+            throw error;
         }
     }
-
-    private async readPersonal(profile:string, fieldName:string): Promise<string>{
-        const query = `SELECT field_value FROM personal_fields WHERE profile = ? and field_name = ?`;
-        try{
-            const result = await this.db!.getFirstAsync<string>(query, [profile, fieldName])
-            if(!result){
-                throw new Error('Failed to retrieve personal field: No result returned.');
-            }
-            return result
-        }catch(error){
-            console.log('Error when retrieving personal field: ', error);
-            throw(error)
-        }
-    }
-    //CREATE:
-
-    private async createContact (contact_code:string): Promise<string> {
+ 
+    // -------------------------------------------------------------------------
+    // PRIVATE: contacts table
+    // -------------------------------------------------------------------------
+ 
+    private async createContact(contact_code: string): Promise<string> {
         const query = `INSERT INTO contacts (contact_code) VALUES (?) RETURNING contact_code`;
-        try{
-            const result = await this.db!.getFirstAsync<{ contact_code:string }>(query, contact_code);
-            if(!result){
-                throw new Error('Failed to create contact: No result returned.');
-            } 
+        try {
+            const result = await this.db!.getFirstAsync<{ contact_code: string }>(query, contact_code);
+            if (!result) throw new Error('Failed to create contact: No result returned.');
             return result.contact_code;
-        }catch(error){
+        } catch (error) {
             console.log('Error when creating new contact: ', error);
-            throw(error);
-        }
-
-    }
-
-    private async createSocialFields (contact_code:string, social_field:string, link:string): Promise<string> {
-        const query = `INSERT INTO social_fields (contact_code, social_field, link) VALUES (?,?,?) RETURNING contact_code`;
-        try{
-            const result = await this.db!.getFirstAsync<{ contact_code:string }>(query, contact_code, social_field, link);
-            if(!result){
-                throw new Error('Failed to create social_field: No result returned.');
-            } 
-            return result.contact_code;
-        }catch(error){
-            console.log('Error when creating new contact: ', error);
-            throw(error);
-        }
-
-    }
-
-    private async createIsFavorite (contact_code:string): Promise<string> {
-        const query = `INSERT INTO is_favorite (contact_code) VALUES (?) RETURNING contact_code`;
-        try{
-            const result = await this.db!.getFirstAsync<{ contact_code:string }>(query, contact_code);
-            if(!result){
-                throw new Error('Failed to create is_favorite: No result returned.');
-            } 
-            return result.contact_code;
-        }catch(error){
-            console.log('Error when creating new contact: ', error);
-            throw(error);
-        }
-
-    }
-
-
-    //READ:
-    private async getAllContacts(): Promise<Array<string>>{
-        const query = `SELECT * FROM contacts`;
-        try{
-            const result = await this.db!.getAllAsync<string>(query);
-            return result;
-        }catch(error){
-            console.log('Error retrieving all contacts: ', error);
-            throw(error);
+            throw error;
         }
     }
-
-    private async getContact(contact_code:string): Promise<string>{
+ 
+    private async getContact(contact_code: string): Promise<string> {
         const query = `SELECT * FROM contacts WHERE contact_code = ?`;
-        try{
+        try {
             const result = await this.db!.getFirstAsync<string>(query, [contact_code]);
-            if(!result){
-                throw new Error('Failed to retrieve contact.')
-            }
+            if (!result) throw new Error('Failed to retrieve contact.');
             return result;
-        }catch(error){
-            console.log('Error when retrieving Contact: ', error);
-            throw(error);
+        } catch (error) {
+            console.log('Error when retrieving contact: ', error);
+            throw error;
         }
-        
     }
-
-    private async getSingleSocialField(contactCode:string, socialField:string): Promise<SocialObj>{
-        const query = `SELECT * FROM social_fields WHERE contact_code = ? AND social_field = ?`;
-        try{
-            const result = await this.db!.getFirstAsync<SocialObj>(query, [contactCode,socialField])
-            if(!result){
-                throw new Error('Failed to retrieve social field')
-            }
-            return result
+ 
+    private async getAllContacts(): Promise<Array<string>> {
+        const query = `SELECT * FROM contacts`;
+        try {
+            return await this.db!.getAllAsync<string>(query);
+        } catch (error) {
+            console.log('Error retrieving all contacts: ', error);
+            throw error;
         }
-        catch(error){
-            throw(error)
-        }
-
     }
-    private async getSocialFields(contact_code:string): Promise<Array<SocialObj>>{
-        const query = `SELECT * FROM social_fields WHERE contact_code = ?`;
-        try{
-            const result = await this.db!.getAllAsync<SocialObj>(query, [contact_code]);
-            if(!result){
-                throw new Error('Failed to retrieve social fields.')
-            }
-            return result;
-        }catch(error){
-            console.log('Error when retrieving social fields: ', error);
-            throw(error);
+ 
+    private async deleteContact(contact_code: string): Promise<number> {
+        const query = `DELETE FROM contacts WHERE contact_code = ?`;
+        try {
+            const result = await this.db!.runAsync(query, [contact_code]);
+            return result.changes;
+        } catch (error) {
+            console.log('Error when deleting contact: ', error);
+            throw error;
         }
-        
     }
-
-    private async getIsFavorite(contact_code:string): Promise<boolean>{
+ 
+    // -------------------------------------------------------------------------
+    // PRIVATE: is_favorite table
+    // -------------------------------------------------------------------------
+ 
+    private async createIsFavorite(contact_code: string): Promise<string> {
+        const query = `INSERT INTO is_favorite (contact_code) VALUES (?) RETURNING contact_code`;
+        try {
+            const result = await this.db!.getFirstAsync<{ contact_code: string }>(query, contact_code);
+            if (!result) throw new Error('Failed to create is_favorite: No result returned.');
+            return result.contact_code;
+        } catch (error) {
+            console.log('Error when creating is_favorite: ', error);
+            throw error;
+        }
+    }
+ 
+    private async getIsFavorite(contact_code: string): Promise<boolean> {
         const query = `SELECT * FROM is_favorite WHERE contact_code = ?`;
-        try{
+        try {
             const result = await this.db!.getFirstAsync<string>(query, [contact_code]);
-            
-            if(!result){
-                return false;
-            }
-            return true;
-        }catch(error){
+            return !!result;
+        } catch (error) {
             console.log('Error when retrieving is_favorite: ', error);
-            throw(error);
+            throw error;
         }
-        
     }
-    
-
-    //UPDATE:
-    
-    private async updateSocialField(contact_code:string, oldSocialField:string, social_field:string, link: string): Promise<number>{
-        const query = `UPDATE social_fields SET social_field = ?, link = ? WHERE contact_code = ? AND social_field = ?`;
-        try{
-            const result = await this.db!.runAsync(query, [social_field, link, contact_code, oldSocialField]);
+ 
+    private async deleteIsFavorite(contact_code: string): Promise<number> {
+        const query = `DELETE FROM is_favorite WHERE contact_code = ?`;
+        try {
+            const result = await this.db!.runAsync(query, [contact_code]);
+            return result.changes;
+        } catch (error) {
+            console.log('Error when deleting is_favorite: ', error);
+            throw error;
+        }
+    }
+ 
+    // -------------------------------------------------------------------------
+    // PRIVATE: social_fields table
+    // -------------------------------------------------------------------------
+ 
+    private async createSocialFields(contact_code: string, label: string, service: string, link: string): Promise<string> {
+        const query = `INSERT INTO social_fields (contact_code, label, service, link) VALUES (?,?,?,?) RETURNING contact_code`;
+        try {
+            const result = await this.db!.getFirstAsync<{ contact_code: string }>(query, contact_code, label, service, link);
+            if (!result) throw new Error('Failed to create social_field: No result returned.');
+            return result.contact_code;
+        } catch (error) {
+            console.log('Error when creating social field: ', error);
+            throw error;
+        }
+    }
+ 
+    private async getSingleSocialField(contactCode: string, socialField: string): Promise<SocialObj> {
+        const query = `SELECT * FROM social_fields WHERE contact_code = ? AND label = ?`;
+        try {
+            const result = await this.db!.getFirstAsync<SocialObj>(query, [contactCode, socialField]);
+            if (!result) throw new Error('Failed to retrieve social field.');
+            return result;
+        } catch (error) {
+            throw error;
+        }
+    }
+ 
+    private async getSocialFields(contact_code: string): Promise<Array<SocialObj>> {
+        const query = `SELECT * FROM social_fields WHERE contact_code = ?`;
+        try {
+            const result = await this.db!.getAllAsync<SocialObj>(query, [contact_code]);
+            if (!result) throw new Error('Failed to retrieve social fields.');
+            return result;
+        } catch (error) {
+            console.log('Error when retrieving social fields: ', error);
+            throw error;
+        }
+    }
+ 
+    private async updateSocialField(contact_code: string, oldLabel: string, newLabel: string, link: string): Promise<number> {
+        const query = `UPDATE social_fields SET label = ?, link = ? WHERE contact_code = ? AND label = ?`;
+        try {
+            const result = await this.db!.runAsync(query, [newLabel, link, contact_code, oldLabel]);
             console.log('Rows affected:', result.changes);
             return result.changes;
-        }catch(error){
-            console.log('Error when updating social field values:', error);
-            throw(error);
+        } catch (error) {
+            console.log('Error when updating social field: ', error);
+            throw error;
         }
     }
-
-    //DELETE:
-    private async deleteContact(contact_code:string):Promise<number>{
-        const query = 'DELETE FROM contacts WHERE contact_code = ?';
-        try{
-            const result = await this.db!.runAsync(query, [contact_code]);
+ 
+    private async deleteSocialField(contact_code: string, label: string): Promise<number> {
+        const query = `DELETE FROM social_fields WHERE contact_code = ? AND label = ?`;
+        try {
+            const result = await this.db!.runAsync(query, [contact_code, label]);
             return result.changes;
-        }catch(error){
-            console.log('Error when deleting contact:', error);
-            throw(error);
+        } catch (error) {
+            console.log('Error when deleting social field: ', error);
+            throw error;
         }
     }
-    
-    private async deleteSocialField(contact_code:string, social_field:string):Promise<number>{
-        const query = 'DELETE FROM social_fields WHERE contact_code = ? AND social_field = ?';
-        try{
-            const result = await this.db!.runAsync(query, [contact_code, social_field]);
-            return result.changes;
-        }catch(error){
-            console.log('Error when deleting social field:', error);
-            throw(error);
-        }
-    }
-    
-    private async deleteIsFavorite(contact_code:string):Promise<number>{
-        const query = 'DELETE FROM is_favorite WHERE contact_code = ?';
-        try{
-            const result = await this.db!.runAsync(query, [contact_code]);
-            return result.changes;
-        }catch(error){
-            console.log('Error when deleting is_favorite:', error);
-            throw(error);
-        }
-    }    
-
-
+ 
 
 }
-
-
-//export singleton instance of DBHelper (new keyword exports a single instance of DBHelper() no new keyword would export the class):
+ 
 export default new DBHelper();
