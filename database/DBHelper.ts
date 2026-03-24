@@ -15,6 +15,11 @@ interface profileObj {
     pictureLink: string | Promise<string>,
     contact: Contacts.ExistingContact | Promise<Contacts.ExistingContact>
 }
+
+interface fields{
+    field_name: string
+    field_id: number
+}
  
 export class DBHelper {
  
@@ -204,7 +209,16 @@ export class DBHelper {
             throw error;
     }}
 
-    private async readFields
+    private async readAllFields(profile_id: number): Promise<fields[]>{
+        const query = `SELECT * FROM fields WHERE profile_id = ?`;
+        try{
+            const returnedFields:fields[] = await this.db!.getAllAsync<fields>(query, profile_id)
+            if (!returnedFields) throw new Error('Failed to read fields: No result returned.');
+            return returnedFields;
+            } catch (error) {
+            console.log('Error when reading field:s ', error);
+            throw error;
+    }}
 
 
     // -------------------------------------------------------------------------
