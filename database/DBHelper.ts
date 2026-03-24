@@ -193,9 +193,18 @@ export class DBHelper {
     // -------------------------------------------------------------------------
     // PRIVATE: fields table
     // -------------------------------------------------------------------------
-    private async createFields(profile_id: number, field_name: string, field_id: string): Promise<string>{
-        const query = `INSERT INTO profiles`
-    }
+    private async createFields(profile_id: number, field_name: string, field_id: string): Promise<number>{
+        const query = `INSERT INTO fields (profile_id, field_name, field_id) VALUES (?, ?, ?) RETURNING field_id`;
+        try{
+            const result = await this.db!.getFirstAsync<{profile_id: number}>(query, [profile_id,field_name,field_id])
+            if (!result) throw new Error('Failed to create profile: No result returned.');
+            return result.profile_id;
+        } catch (error) {
+            console.log('Error when creating field: ', error);
+            throw error;
+    }}
+
+    private async readFields
 
 
     // -------------------------------------------------------------------------
@@ -205,9 +214,9 @@ export class DBHelper {
     private async createProfile(contact_code: string, name: string, icon: string, picture_link : string): Promise<profileObj> {
         const query = `INSERT INTO profiles (contact_code, name, icon, picture_link) VALUES (?, ?, ?, ?) RETURNING name`;
         try {
-            const result = await this.db!.getFirstAsync<{ name: profileObj }>(query, contact_code, name, icon, picture_link);
+            const result = await this.db!.getFirstAsync<profileObj>(query, [contact_code, name, icon, picture_link]);
             if (!result) throw new Error('Failed to create profile: No result returned.');
-            return result.name;
+            return result;
         } catch (error) {
             console.log('Error when creating profile: ', error);
             throw error;
