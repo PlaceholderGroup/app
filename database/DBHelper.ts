@@ -168,6 +168,7 @@ export class DBHelper {
             `CREATE TABLE IF NOT EXISTS fields(
                 profile_id INTEGER NOT NULL,
                 field_name TEXT NOT NULL,
+                field_id TEXT NOT NULL,
                 FOREIGN KEY (profile_id) REFERENCES profiles(profile_id) ON DELETE CASCADE
             )`
         ];
@@ -192,7 +193,7 @@ export class DBHelper {
     // -------------------------------------------------------------------------
     // PRIVATE: fields table
     // -------------------------------------------------------------------------
-    private async createFields(profile_id: number, field_name: string): Promise<string>{
+    private async createFields(profile_id: number, field_name: string, field_id: string): Promise<string>{
         const query = `INSERT INTO profiles`
     }
 
