@@ -1,4 +1,5 @@
 import Avatar from "@/components/Avatar";
+import QuickShareDevices from "@/components/QuickShareDevices";
 import TabsSafeAreaView from "@/components/TabsSafeAreaView";
 import { getContact, toVCard } from "@/utils/contacts";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -45,6 +46,7 @@ export default function Sharing() {
                         <Text style={styles.quickShareLabel}>Quick Share</Text>
                         <Text style={styles.quickSharePrompt}>Select someone from below to share with.</Text>
                     </View>
+                    <QuickShareDevices />
                 </View>
             </ScrollView>
         </TabsSafeAreaView>

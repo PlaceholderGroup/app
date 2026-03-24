@@ -2,6 +2,11 @@ import * as Bluetooth from 'munim-bluetooth';
 
 import { PermissionsAndroid, Platform } from 'react-native';
 
+const SERVICE_UUID = "9209358a-9bd4-4897-bfe4-0b53070ea9b7";
+const CHARACTERISTIC_UUID = "80313cb9-dd2f-45f1-b7d5-896938595556";
+
+let deviceId = "";
+
 export async function requestBluetoothPermission() {
     if (Platform.OS === 'android' && Platform.Version >= 31) {
         const result = await PermissionsAndroid.requestMultiple([
@@ -17,16 +22,21 @@ export async function requestBluetoothPermission() {
 };
 
 export async function startSharing(name: string) {
+    console.log(name);
     if (await Bluetooth.requestBluetoothPermission()) {
+        // Peripheral.setDeviceName(name);
+
+        // TODO: For some reason this doesn't properly update the advertised local name.
+        // The other BLE peripheral module does, but instead doesn't broadcast the serviceUUIDs 
         Bluetooth.startAdvertising({
-            serviceUUIDs: ["9209358a-9bd4-4897-bfe4-0b53070ea9b7"],
+            serviceUUIDs: [SERVICE_UUID],
             localName: name,
         });
 
         Bluetooth.setServices([{
-            uuid: "9209358a-9bd4-4897-bfe4-0b53070ea9b7",
+            uuid: SERVICE_UUID,
             characteristics: [{
-                uuid: "80313cb9-dd2f-45f1-b7d5-896938595556",
+                uuid: CHARACTERISTIC_UUID,
                 properties: ["read", "notify"],
                 value: "Hello, world!",
             }],
@@ -43,30 +53,77 @@ export async function stopSharing() {
     }
 }
 
-export async function startScanning() {
-    if (await Bluetooth.requestBluetoothPermission()) {
+export async function startScanning(setDevices?: React.Dispatch<React.SetStateAction<Record<string, Bluetooth.BLEDevice>>>) {
+    if (await Bluetooth.isBluetoothEnabled() && await Bluetooth.requestBluetoothPermission()) {
         console.log("Adding listener!");
         Bluetooth.addDeviceFoundListener(async (device: Bluetooth.BLEDevice) => {
-            console.log(device);
-            Bluetooth.stopScan();
-            await Bluetooth.connect(device.id);
-            console.log("Connected", device);
-            Bluetooth.discoverServices(device.id)
-                .then((services) => {
-                    console.log(services);
-                })
+            setDevices?.((prev) => ({
+                ...prev,
+                [device.id]: device
+            }));
         });
 
-        Bluetooth.startScan({ serviceUUIDs: ["9209358a-9bd4-4897-bfe4-0b53070ea9b7"] });
+        Bluetooth.startScan({ serviceUUIDs: [SERVICE_UUID] });
         console.log("Starting scanning!");
-
     }
 }
 
+export async function connectToDevice(deviceId: string) {
+    if (await Bluetooth.isBluetoothEnabled() && await Bluetooth.requestBluetoothPermission()) {
+        try {
+            await Bluetooth.connect(deviceId);
+        } catch (error) {
+            console.log("Unable to connect to device:", deviceId, error);
+        }
+    }
+}
+
+// export async function startScanning(onDeviceFound: React.Dispatch<React.SetStateAction<Record<string, Bluetooth.BLEDevice>>>) {
+//     if (await Bluetooth.requestBluetoothPermission()) {
+//         console.log("Adding listener!");
+//         Bluetooth.addDeviceFoundListener(async (device: Bluetooth.BLEDevice) => {
+//             console.log(device.id);
+//             console.log(device);
+//             Bluetooth.stopScan();
+//             await Bluetooth.connect(device.id);
+//             deviceId = device.id;
+//             console.log("Connected", device);
+//             Bluetooth.discoverServices(device.id)
+//                 .then((services) => {
+//                     return services.filter((service) => service.uuid === SERVICE_UUID);
+//                 })
+//                 .then((services) => {
+//                     Bluetooth.readCharacteristic(device.id, SERVICE_UUID, CHARACTERISTIC_UUID)
+//                         .then((characteristic) => {
+//                             console.log("Value:", characteristic.value);
+//                             const value = Buffer.from(characteristic.value, "hex").toString();
+//                             console.log(value);
+//                         })
+//                         .catch((error) => {
+//                             console.log("Failed to read characteristic:", error)
+//                         })
+//                 });
+//         });
+
+//         Bluetooth.startScan({ serviceUUIDs: [SERVICE_UUID] });
+//         console.log("Starting scanning!");
+
+//     }
+// }
+
 export async function stopScanning() {
     if (await Bluetooth.requestBluetoothPermission()) {
+        Bluetooth.removeListeners(1);
         Bluetooth.stopScan();
         console.log("Stopped scanning!");
     }
+}
+
+export async function disconnect() {
+    console.log("Disconnecting from:", deviceId);
+    Bluetooth.removeListeners(1);
+    Bluetooth.disconnect(deviceId);
+    console.log("Disconnected:", deviceId);
+    deviceId = "";
 }
 
