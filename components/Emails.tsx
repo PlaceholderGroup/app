@@ -1,29 +1,29 @@
 import * as Contacts from "expo-contacts";
 import { StyleSheet, Text, View } from "react-native";
 
-import PhoneIcon from "./ContactDetailIcons/PhoneIcon";
+import EmailIcon from "./ContactDetailIcons/EmailIcon";
 import ThreeDotsIcon from "./ContactDetailIcons/ThreeDotsIcon";
 
-export default function PhoneNumbers({ phoneNumbers }: { phoneNumbers?: Contacts.PhoneNumber[] }) {
+export default function Emails({ emails }: { emails?: Contacts.Email[] }) {
     return (
         <View style={styles.container}>
-            <Text style={styles.label}>Phone</Text>
-            <View style={styles.phoneNumbers}>
+            <Text style={styles.label}>Email</Text>
+            <View style={styles.emailContainer}>
                 {
-                    phoneNumbers?.map((phoneNumber) => (
-                        <View key={phoneNumber.id} style={styles.phoneItem}>
-                            <View style={styles.phoneIcon}>
-                                <PhoneIcon/>
+                    emails?.map((email) => (
+                        <View key={email.id} style={styles.emailItem}>
+                            <View style={styles.emailIcon}>
+                                <EmailIcon/>
                             </View>
 
-                            <View style={styles.phoneDetails}>
-                                <Text key={phoneNumber.id} style={styles.phoneNumBox}>{phoneNumber.number}</Text>
-                                <Text style={styles.phoneTypeBox}>{phoneNumber.label}</Text>
+                            <View style={styles.emailDetails}>
+                                <Text key={email.id} style={styles.emailBox}>{email.email}</Text>
+                                <Text style={styles.emailType}>{email.label}</Text>
                             </View>
 
-                            <View style={styles.phoneLabels}>
-                                <View style={styles.phoneProfileLogos}>
-                                    {/* TODO: profile icons this number is linked to */}
+                            <View style={styles.emailLabels}>
+                                <View style={styles.emailProfileLogos}>
+                                    {/* TODO: profile icons this email is linked to */}
                                 </View>
                                 <ThreeDotsIcon/>
                             </View>
@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
         fontSize: 20,
         padding: 10,
     },
-    phoneNumbers: {
+    emailContainer: {
         borderRadius: 20,
         borderWidth: 1,
         borderColor: "lightgray",
@@ -60,31 +60,30 @@ const styles = StyleSheet.create({
         gap: 20,
         alignSelf: "stretch",
     },
-    phoneItem: {
+    emailItem: {
         display: "flex",
         alignItems: "flex-start",
         flexDirection: "row",
         gap: 20,
         alignSelf: "stretch",
-        //backgroundColor: "#6c99c2", // For testing
     },
-    phoneIcon: {
+    emailIcon: {
         width: 24,
         height: 24,
         aspectRatio: 1/1,
     },
-    phoneDetails: {
+    emailDetails: {
         flexDirection: "column",
         alignItems: "flex-start",
         gap: 5,
         flex: 1,
     },
-    phoneLabels: {
+    emailLabels: {
         gap: 10,
         alignItems: "center",
         flexDirection: "row",
     },
-    phoneNumBox: {
+    emailBox: {
         alignSelf: "stretch",
         color: "#000",
         fontSize: 16,
@@ -93,7 +92,7 @@ const styles = StyleSheet.create({
         lineHeight: 16 * 1.15,
         textTransform: "capitalize",
     },
-    phoneTypeBox: {
+    emailType: {
         alignSelf: "stretch",
         color: "#000",
         fontSize: 14,
@@ -102,7 +101,7 @@ const styles = StyleSheet.create({
         lineHeight: 16 * 1.15,
         textTransform: "capitalize",
     },
-    phoneProfileLogos: {
+    emailProfileLogos: {
         gap: -8,
         alignItems: "flex-start",
     }

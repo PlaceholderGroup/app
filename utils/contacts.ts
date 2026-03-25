@@ -6,7 +6,8 @@ export const CONTACT_FIELDS = [
     Contacts.Fields.Emails,
     Contacts.Fields.Addresses,
     Contacts.Fields.Birthday,
-    Contacts.Fields.SocialProfiles
+    Contacts.Fields.SocialProfiles,
+    Contacts.Fields.Dates
 ];
 
 // TODO: The types on this are kind of ugly, I mostly just copied them from Intellisense type previews, they can probably be cleaned up
