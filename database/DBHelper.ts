@@ -9,11 +9,11 @@ interface SocialObj {
 }
  
 interface profileObj {
-    profileID: string | Promise<string>,
+    profileID: number | Promise<number>,
     profileName: string | Promise<string>,
     icon: string | Promise<string>,
     pictureLink: string | Promise<string>,
-    contact: Contacts.ExistingContact | Promise<Contacts.ExistingContact>
+    contact: Contacts.ExistingContact | Promise<Contacts.ExistingContact> | undefined
 }
 
 interface fields{
@@ -73,6 +73,7 @@ export class DBHelper {
         return result;
     }
 
+    // DO THIS WEDNESDAY 
     async updateContactObj(){
 
     }
@@ -81,12 +82,15 @@ export class DBHelper {
         return this.deleteContact(contact_code);
     }
 
+    // DO THIS WEDNESDAY 
+    // Need to know how we need to retrieve the contact. Should we need you to get the profile object to return one?
     async createProfileObj(contact_code: string, name: string, icon: string, picture_link : string): Promise<profileObj>{
-
+        const result = await this.createProfile(contact_code, name, icon, picture_link)
+        return result
 
     }
 
-    async readProfileObj(){
+    async getProfileObj(){
 
     }
 
@@ -220,6 +224,16 @@ export class DBHelper {
             throw error;
     }}
 
+    private async deleteField(profile_id: number, field_name: string, field_id: string): Promise<number>{
+        const query = `DELETE FROM fields WHERE profile_id = ? AND field_name = ? AND field_name = ?`;
+        try{
+            const result = await this.db!.runAsync(query, [profile_id, field_name, field_id])
+        return result.changes;
+        } catch (error) {
+            console.log('Error when deleting field: ', error);
+            throw error;
+        }
+    }
 
     // -------------------------------------------------------------------------
     // PRIVATE: profiles table
@@ -228,21 +242,39 @@ export class DBHelper {
     private async createProfile(contact_code: string, name: string, icon: string, picture_link : string): Promise<profileObj> {
         const query = `INSERT INTO profiles (contact_code, name, icon, picture_link) VALUES (?, ?, ?, ?) RETURNING name`;
         try {
-            const result = await this.db!.getFirstAsync<profileObj>(query, [contact_code, name, icon, picture_link]);
+            const result = await this.db!.getFirstAsync<{profile_id: number}>(query, [contact_code, name, icon, picture_link]);
             if (!result) throw new Error('Failed to create profile: No result returned.');
-            return result;
+            return this.readProfile(contact_code, result.profile_id);
         } catch (error) {
             console.log('Error when creating profile: ', error);
             throw error;
         }
     }
+
+    // Need to follow this template for ALL of the reads and ^ for all of the creates
  
     private async readProfile(contact_code: string, profile_id: number): Promise<profileObj> {
         const query = `SELECT * FROM profiles WHERE contact_code = ? AND profile_id = ?`;
         try {
-            const result = await this.db!.getFirstAsync<profileObj>(query, [contact_code, profile_id]);
+            const result = await this.db!.getFirstAsync<{
+                profile_id: number
+                name: string
+                icon: string
+                picture_link: string
+                contact_code: string
+            }>(query, [contact_code, profile_id]);
+            // check for missing info and need to check if contact exists
             if (!result) throw new Error('Failed to retrieve profile.');
-            return result;
+            const contact = await Contacts.getContactByIdAsync(result.contact_code);
+            if (!contact) throw new Error('Failed to retrieve contact for profile.');
+
+            return {
+                profileID: result.profile_id,
+                profileName: result.name,
+                icon: result.icon,
+                pictureLink: result.picture_link,
+                contact: contact
+            };
         } catch (error) {
             console.log('Error when retrieving profile: ', error);
             throw error;
