@@ -9,11 +9,11 @@ interface SocialObj {
 }
  
 interface profileObj {
-    profileID: number | Promise<number>,
-    profileName: string | Promise<string>,
-    icon: string | Promise<string>,
-    pictureLink: string | Promise<string>,
-    contact: Contacts.ExistingContact | Promise<Contacts.ExistingContact> | undefined
+    profile_id: number,
+    name: string,
+    icon: string ,
+    picture_link: string,
+    contact: Contacts.ExistingContact | undefined | string
 }
 
 interface fields{
@@ -73,24 +73,41 @@ export class DBHelper {
         return result;
     }
 
-    // DO THIS WEDNESDAY 
-    async updateContactObj(){
+    // Just run expo update contact function.
+    async updateContactObj(incomingContact: Contacts.ExistingContact): Promise<string>{
+        return Contacts.updateContactAsync(incomingContact)
 
     }
 
-    async deleteContactObj(contact_code: string): Promise<number> {
-        return this.deleteContact(contact_code);
+    async deleteContactObj(contactCode: string): Promise<number> {
+        return this.deleteContact(contactCode);
     }
 
-    // DO THIS WEDNESDAY 
     // Need to know how we need to retrieve the contact. Should we need you to get the profile object to return one?
-    async createProfileObj(contact_code: string, name: string, icon: string, picture_link : string): Promise<profileObj>{
-        const result = await this.createProfile(contact_code, name, icon, picture_link)
+    async createProfileObj(contactCode: string, name: string, icon: string, picture_link : string): Promise<profileObj>{
+        const result = await this.createProfile(contactCode, name, icon, picture_link)
         return result
 
     }
+    // Make sure to set the contact using the contactCode in the contact field in the obj
+    async getProfileObj(contactCode: string, profileId: number){
+        const profile = await this.getProfile(contactCode, profileId)
+        
+        const fields = await this.readAllFields(profile.profile_id)
+        
+        
+        // Grab contact this profile refers to.
+        const returnedContact = await Contacts.getContactByIdAsync(contactCode);
+        if (profile.name == "Stock"){
+            return returnedContact
+        }else{
+            // Need to use the field.field_name to get the contact.field then get the specific one by field_id
+            for(const field of fields){
+                const fieldName = field.field_name
+                
 
-    async getProfileObj(){
+            }
+        }
 
     }
 
@@ -244,7 +261,7 @@ export class DBHelper {
         try {
             const result = await this.db!.getFirstAsync<{profile_id: number}>(query, [contact_code, name, icon, picture_link]);
             if (!result) throw new Error('Failed to create profile: No result returned.');
-            return this.readProfile(contact_code, result.profile_id);
+            return this.getProfile(contact_code, result.profile_id);
         } catch (error) {
             console.log('Error when creating profile: ', error);
             throw error;
@@ -253,7 +270,7 @@ export class DBHelper {
 
     // Need to follow this template for ALL of the reads and ^ for all of the creates
  
-    private async readProfile(contact_code: string, profile_id: number): Promise<profileObj> {
+    private async getProfile(contact_code: string, profile_id: number): Promise<profileObj> {
         const query = `SELECT * FROM profiles WHERE contact_code = ? AND profile_id = ?`;
         try {
             const result = await this.db!.getFirstAsync<{
@@ -269,11 +286,11 @@ export class DBHelper {
             if (!contact) throw new Error('Failed to retrieve contact for profile.');
 
             return {
-                profileID: result.profile_id,
-                profileName: result.name,
+                profile_id: result.profile_id,
+                name: result.name,
                 icon: result.icon,
-                pictureLink: result.picture_link,
-                contact: contact
+                picture_link: result.picture_link,
+                contact: result.contact_code
             };
         } catch (error) {
             console.log('Error when retrieving profile: ', error);
@@ -311,9 +328,9 @@ export class DBHelper {
     private async createContact(contact_code: string): Promise<string> {
         const query = `INSERT INTO contacts (contact_code) VALUES (?) RETURNING contact_code`;
         try {
-            const result = await this.db!.getFirstAsync<{ contact_code: string }>(query, contact_code);
+            const result = await this.db!.getFirstAsync<string>(query, contact_code);
             if (!result) throw new Error('Failed to create contact: No result returned.');
-            return result.contact_code;
+            return result;
         } catch (error) {
             console.log('Error when creating new contact: ', error);
             throw error;
@@ -395,12 +412,12 @@ export class DBHelper {
     // PRIVATE: social_fields table
     // -------------------------------------------------------------------------
  
-    private async createSocialFields(contact_code: string, label: string, service: string, link: string): Promise<string> {
+    private async createSocialFields(contact_code: string, label: string, service: string, link: string): Promise<SocialObj> {
         const query = `INSERT INTO social_fields (contact_code, label, service, link) VALUES (?,?,?,?) RETURNING contact_code`;
         try {
-            const result = await this.db!.getFirstAsync<{ contact_code: string }>(query, contact_code, label, service, link);
+            const result = await this.db!.getFirstAsync<SocialObj>(query, contact_code, label, service, link);
             if (!result) throw new Error('Failed to create social_field: No result returned.');
-            return result.contact_code;
+            return result;
         } catch (error) {
             console.log('Error when creating social field: ', error);
             throw error;
