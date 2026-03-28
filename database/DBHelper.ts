@@ -13,6 +13,7 @@ interface profileObj {
     name: string,
     icon: string ,
     picture_link: string,
+    fields: fields[],
     contact: Contacts.ExistingContact | undefined | string
 }
 
@@ -98,24 +99,37 @@ export class DBHelper {
         
         // Grab contact this profile refers to.
         const returnedContact = await Contacts.getContactByIdAsync(contactCode);
+        if (!returnedContact) throw new Error('Contact not found.');
         if (profile.name == "Stock"){
-            return returnedContact
+            profile.contact = returnedContact
+            return profile
         }else{
+            const updatedContact = { ...returnedContact}
             // Need to use the field.field_name to get the contact.field then get the specific one by field_id
             for(const field of fields){
-                const fieldName = field.field_name
-                
+                const fieldName = field.field_name as keyof typeof returnedContact
+                const fieldArray = returnedContact[fieldName] as any[]
+                const specificValue = fieldArray?.find(item => item.id === field.field_id);
+                (updatedContact as any)[fieldName] = specificValue ? [specificValue]:[];
 
             }
+            profile.contact = updatedContact
+            return profile
         }
 
     }
 
-    async updateProfileObj(){
-
+    async updateProfileObj(profile_id:number, name: string, icon: string, picture_link: string, fields:fields[]){
+        const result = await this.updateProfile(profile_id, name, icon, picture_link)
+        for(const field of fields){
+            await this.updateField(profile_id, field.field_name, field.field_id)
+        }
+        return result
     }
 
-    async deleteProfileObj(){
+    async deleteProfileObj(profile_id: number){
+        const result = await this.deleteProfile(profile_id)
+        return result
 
     }
  
@@ -241,6 +255,17 @@ export class DBHelper {
             throw error;
     }}
 
+    private async updateField(profile_id: number,field_name: string, field_id: number){
+        const query = `UPDATE fields SET field_name = ? AND field_id = ? WHERE profile_id = ?`;
+        try{
+            const result = await this.db!.runAsync(query, [field_name, field_id, profile_id])
+            return result.changes;
+        }catch(error){
+            console.log('Error when updating field: ', error);
+            throw error;
+        }
+    }
+
     private async deleteField(profile_id: number, field_name: string, field_id: string): Promise<number>{
         const query = `DELETE FROM fields WHERE profile_id = ? AND field_name = ? AND field_name = ?`;
         try{
@@ -284,12 +309,14 @@ export class DBHelper {
             if (!result) throw new Error('Failed to retrieve profile.');
             const contact = await Contacts.getContactByIdAsync(result.contact_code);
             if (!contact) throw new Error('Failed to retrieve contact for profile.');
+            const fields = await this.readAllFields(result.profile_id)
 
             return {
                 profile_id: result.profile_id,
                 name: result.name,
                 icon: result.icon,
                 picture_link: result.picture_link,
+                fields: fields,
                 contact: result.contact_code
             };
         } catch (error) {
