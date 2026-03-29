@@ -28,8 +28,8 @@ export class DBHelper {
     // PUBLIC API
     // -------------------------------------------------------------------------
  
-    async getContactObj(id: string, fields: Contacts.FieldType[]): Promise<Contacts.ExistingContact | undefined> {
-        const contact = await Contacts.getContactByIdAsync(id, fields);
+    async getContactObj(id: string): Promise<Contacts.ExistingContact | undefined> {
+        const contact = await Contacts.getContactByIdAsync(id);
  
         if (contact) {
             if (Platform.OS !== "ios") {
