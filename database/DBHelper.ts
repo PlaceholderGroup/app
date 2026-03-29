@@ -19,7 +19,7 @@ interface profileObj {
 
 interface fields{
     field_name: string
-    field_id: number
+    field_id: string
 }
  
 export class DBHelper {
@@ -85,8 +85,11 @@ export class DBHelper {
     }
 
     // Need to know how we need to retrieve the contact. Should we need you to get the profile object to return one?
-    async createProfileObj(contactCode: string, name: string, icon: string, picture_link : string): Promise<profileObj>{
+    async createProfileObj(contactCode: string, name: string, icon: string, picture_link : string, fields: fields[]): Promise<profileObj>{
         const result = await this.createProfile(contactCode, name, icon, picture_link)
+        for(const field of fields){
+            await this.createFields(result.profile_id, field.field_name, field.field_id)
+        }
         return result
 
     }
@@ -255,7 +258,7 @@ export class DBHelper {
             throw error;
     }}
 
-    private async updateField(profile_id: number,field_name: string, field_id: number){
+    private async updateField(profile_id: number,field_name: string, field_id: string){
         const query = `UPDATE fields SET field_name = ?, field_id = ? WHERE profile_id = ?`;
         try{
             const result = await this.db!.runAsync(query, [field_name, field_id, profile_id])
