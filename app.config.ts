@@ -1,4 +1,6 @@
-{
+import "tsx";
+
+export default () => ({
   "expo": {
     "name": "my-app",
     "slug": "my-app",
@@ -7,7 +9,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
@@ -18,15 +19,16 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.READ_CONTACTS",
         "android.permission.WRITE_CONTACTS",
         "android.permission.NFC",
-        "android.permission.READ_CONTACTS",
-        "android.permission.WRITE_CONTACTS",
-        "android.permission.NFC"
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_ADVERTISE",
+        "android.permission.BLUETOOTH_CONNECT",
+        "android.permission.BLUETOOTH_SCAN",
+        "android.permission.BLUETOOTH_ADMIN",
       ],
       "package": "com.anonymous.myapp"
     },
@@ -67,18 +69,14 @@
           "faceIDPermission": "Allow $(PRODUCT_NAME) to access your Face ID biometric data."
         }
       ],
-      [
-        "react-native-nfc-manager",
-        {
-          "nfcPermission": "Allow $(PRODUCT_NAME) to interact with nearby NFC devices"
-        }
-      ],
       "expo-sqlite",
-      "expo-font"
+      "expo-font",
+      "react-native-ble-plx",
+      "./plugins/withHCEConfiguration.ts"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
     }
   }
-}
+})

@@ -1,7 +1,7 @@
 import Navbar from "@/components/Navbar";
 import { ContactsProvider } from "@/contexts/ContactsContext";
 import { getContacts } from "@/utils/contacts";
-import { Lexend_400Regular, Lexend_500Medium, useFonts } from "@expo-google-fonts/lexend";
+import { Lexend_300Light, Lexend_400Regular, Lexend_500Medium, useFonts } from "@expo-google-fonts/lexend";
 import { DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import * as Contacts from "expo-contacts";
 import { SplashScreen, Stack } from "expo-router";
@@ -24,6 +24,7 @@ export default function RootLayout() {
     const appState = useRef(AppState.currentState);
 
     const [loaded, error] = useFonts({
+        Lexend_300Light,
         Lexend_400Regular,
         Lexend_500Medium,
     })

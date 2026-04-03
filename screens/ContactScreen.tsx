@@ -5,17 +5,18 @@ import Emails from "@/components/Emails";
 import PhoneNumbers from "@/components/PhoneNumbers";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
+import ProfileCarousel from "@/components/ProfileCarousel";
 import Button from "@/components/Button";
 import TabsSafeAreaView from "@/components/TabsSafeAreaView";
 import { ContactsContext } from "@/contexts/ContactsContext";
 import { openLink } from "@/utils/link";
 import * as Contacts from "expo-contacts";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useContext } from "react";
-import { shareContact } from "../utils/NFC";
 
 
 export default function ContactScreen({ contact }: { contact: Contacts.ExistingContact }) {
+    const router = useRouter();
 
     const { setCurrentContact } = useContext(ContactsContext);
 
@@ -32,7 +33,7 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
                 {
                     (contact) &&
                     <>
-                        <Avatar source={contact.image?.uri} size={192} name={contact.name} />
+                        <ProfileCarousel contact={contact} />
                         <Text style={styles.name}>{contact.name}</Text>
 
                         {/* TODO: These need to be based on the primary phone/email, not just the first one. */}
@@ -50,7 +51,14 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
                                 contact.emails?.[0]?.email && openLink(contact.emails?.[0]?.email, "email");
                             }} />
                         </View>
-                        <Button title="Share Contact" icon="share" type="tertiary" style={styles.shareButton} onPress={() => shareContact(contact)} />
+                        <Button title="Share Contact" icon="share" type="tertiary" style={styles.shareButton} onPress={() => {
+                            router.navigate({
+                                pathname: "/share/[id]",
+                                params: {
+                                    id: contact.id,
+                                }
+                            })
+                        }} />
                     </>
                 }
             </View>
@@ -89,8 +97,11 @@ const styles = StyleSheet.create({
     head: {
         alignItems: "center",
         gap: 20,
-        padding: 20,
-        paddingBottom: 5,
+        backgroundColor: "white",
+        paddingTop: 20,
+        paddingBottom: 20,
+        borderBottomWidth: 1,
+        borderColor: "lightgray",
     },
     avatar: {
         width: 192,
