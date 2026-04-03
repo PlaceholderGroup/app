@@ -2,22 +2,22 @@ import * as Contacts from "expo-contacts";
 import * as SQLite from 'expo-sqlite';
 import { Platform } from "react-native";
  
-interface SocialObj {
+export interface SocialObj {
     social_field: string,
     link: string,
     service: string
 }
  
-interface profileObj {
+export interface profileObj {
     profile_id: number,
     name: string,
     icon: string ,
     picture_link: string,
     fields: fields[],
-    contact: Contacts.ExistingContact | undefined | string
+    contact: Contacts.ExistingContact
 }
 
-interface fields{
+export interface fields{
     field_name: string
     field_id: string
 }
@@ -122,7 +122,7 @@ export class DBHelper {
 
     }
 
-    async getAllProfileObjs(contact_code:string):Promise<profileObj[]>{
+    async getAllProfileObjs(contact_code:string){
         let profileObjects:profileObj[] = []
         const profileIDs = await this.getAllProfileIDs(contact_code)
         for(const id of profileIDs){
@@ -340,7 +340,7 @@ export class DBHelper {
                 icon: result.icon,
                 picture_link: result.picture_link,
                 fields: fields,
-                contact: result.contact_code
+                contact: contact
             };
         } catch (error) {
             console.log('Error when retrieving profile: ', error);

@@ -1,3 +1,4 @@
+import DBHelper from "@/database/DBHelper";
 import * as Contacts from "expo-contacts";
 import React, { useEffect, useRef } from "react";
 import { Animated, Dimensions, StyleSheet, View } from "react-native";
@@ -18,7 +19,31 @@ export default function ProfileCarousel({  contact, onProfileFocus }: {  contact
   const currentIndex = useRef(0);
 
   ///// THIS IS GARBAGE MOCK DATA REPLACE WITH REAL PROFILES AS SOON AS THEY ARE IMPLEMENTED /////
-  const profiles = [contact, contact, contact, contact];
+  
+  const profileList = DBHelper.getAllProfileObjs(contact.id);
+  const profileContacts: Contacts.ExistingContact[] = [];
+
+  useEffect(() => {
+    profileList.then(profileList => {profileList.forEach(profile => {
+      if (profile.contact !== undefined){
+        if (profile.contact.image === undefined){
+          profile.contact.image = {uri: profile.picture_link}
+        }
+        else
+        {
+          profile.contact.image.uri = profile.picture_link;
+        }
+          
+        
+        profileContacts.push(profile.contact);
+      }
+    })
+  });
+  }, [profileList])
+
+
+  // for (ids in listID){getProfileObj(contactID,profileID).push profiles}
+  //const profileContacts = [contact, contact, contact, contact];
   ////////////////////////////////////////////////////////////////////////////////////////////////
 
 ///// Empty function that is called when a profile changes /////
@@ -41,7 +66,7 @@ export default function ProfileCarousel({  contact, onProfileFocus }: {  contact
       if (index !== currentIndex.current) {
         currentIndex.current = index;
 
-        const focusedProfile = profiles[index];
+        const focusedProfile = profileContacts[index];
         if (focusedProfile) {
           _onProfileFocus(focusedProfile, index);
         }
@@ -51,12 +76,12 @@ export default function ProfileCarousel({  contact, onProfileFocus }: {  contact
     return () => {
       scrollX.removeListener(listener);
     };
-  }, [scrollX, profiles]);
+  }, [scrollX, profileContacts]);
 
   return (
     <View style={styles.carousel}>
       <Animated.FlatList
-        data={profiles}
+        data={profileContacts}
         keyExtractor={(_, i) => i.toString()}
         horizontal
         showsHorizontalScrollIndicator={false}
