@@ -1,29 +1,29 @@
 import * as Contacts from "expo-contacts";
 import { StyleSheet, Text, View } from "react-native";
 
-import PhoneIcon from "./ContactDetailIcons/PhoneIcon";
+import AddressIcon from "./ContactDetailIcons/AddressIcon";
 import ThreeDotsIcon from "./ContactDetailIcons/ThreeDotsIcon";
 
-export default function PhoneNumbers({ phoneNumbers }: { phoneNumbers?: Contacts.PhoneNumber[] }) {
+export default function Addresses({ addresses }: { addresses?: Contacts.Address[] }) {
     return (
         <View style={styles.container}>
-            <Text style={styles.label}>Phone</Text>
-            <View style={styles.phoneNumbers}>
+            <Text style={styles.label}>Address</Text>
+            <View style={styles.addressContainer}>
                 {
-                    phoneNumbers?.map((phoneNumber) => (
-                        <View key={phoneNumber.id} style={styles.phoneItem}>
-                            <View style={styles.phoneIcon}>
-                                <PhoneIcon/>
+                    addresses?.map((address) => (
+                        <View key={address.id} style={styles.addressItem}>
+                            <View style={styles.addressIcon}>
+                                <AddressIcon/>
                             </View>
 
-                            <View style={styles.phoneDetails}>
-                                <Text key={phoneNumber.id} style={styles.phoneNumBox}>{phoneNumber.number}</Text>
-                                <Text style={styles.phoneTypeBox}>{phoneNumber.label}</Text>
+                            <View style={styles.addressDetails}>
+                                <Text key={address.id} style={styles.addressBox}>{address.street}</Text>
+                                <Text style={styles.addressType}>{address.label}</Text>
                             </View>
 
-                            <View style={styles.phoneLabels}>
-                                <View style={styles.phoneProfileLogos}>
-                                    {/* TODO: profile icons this number is linked to */}
+                            <View style={styles.addressLabels}>
+                                <View style={styles.addressProfileLogos}>
+                                    {/* TODO: profile icons this address is linked to */}
                                 </View>
                                 <ThreeDotsIcon/>
                             </View>
@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
         fontSize: 20,
         padding: 10,
     },
-    phoneNumbers: {
+    addressContainer: {
         borderRadius: 20,
         borderWidth: 1,
         borderColor: "lightgray",
@@ -60,31 +60,30 @@ const styles = StyleSheet.create({
         gap: 20,
         alignSelf: "stretch",
     },
-    phoneItem: {
+    addressItem: {
         display: "flex",
         alignItems: "flex-start",
         flexDirection: "row",
         gap: 20,
         alignSelf: "stretch",
-        //backgroundColor: "#6c99c2", // For testing
     },
-    phoneIcon: {
+    addressIcon: {
         width: 24,
         height: 24,
         aspectRatio: 1/1,
     },
-    phoneDetails: {
+    addressDetails: {
         flexDirection: "column",
         alignItems: "flex-start",
         gap: 5,
         flex: 1,
     },
-    phoneLabels: {
+    addressLabels: {
         gap: 10,
         alignItems: "center",
         flexDirection: "row",
     },
-    phoneNumBox: {
+    addressBox: {
         alignSelf: "stretch",
         color: "#000",
         fontSize: 16,
@@ -93,7 +92,7 @@ const styles = StyleSheet.create({
         lineHeight: 16 * 1.15,
         textTransform: "capitalize",
     },
-    phoneTypeBox: {
+    addressType: {
         alignSelf: "stretch",
         color: "#000",
         fontSize: 14,
@@ -102,7 +101,7 @@ const styles = StyleSheet.create({
         lineHeight: 16 * 1.15,
         textTransform: "capitalize",
     },
-    phoneProfileLogos: {
+    addressProfileLogos: {
         gap: -8,
         alignItems: "flex-start",
     }

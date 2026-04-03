@@ -1,5 +1,9 @@
+import Addresses from "@/components/Addresses";
+import Avatar from "@/components/Avatar";
+import Dates from "@/components/Dates";
+import Emails from "@/components/Emails";
 import PhoneNumbers from "@/components/PhoneNumbers";
-import { StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 import ProfileCarousel from "@/components/ProfileCarousel";
 import Button from "@/components/Button";
@@ -24,7 +28,7 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
     );
 
     return (
-        <TabsSafeAreaView>
+        <TabsSafeAreaView style={{ flex: 1 }} >
             <View style={styles.head}>
                 {
                     (contact) &&
@@ -58,12 +62,24 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
                     </>
                 }
             </View>
-            <View style={styles.main}>
+            <ScrollView style={styles.main} showsVerticalScrollIndicator={false} bounces={true} overScrollMode="never">
                 {
                     (contact?.phoneNumbers) &&
                     <PhoneNumbers phoneNumbers={contact.phoneNumbers} />
                 }
-            </View>
+                {
+                    (contact?.emails) &&
+                    <Emails emails={contact.emails} />
+                }
+                {
+                    (contact?.birthday || contact?.dates) &&
+                    <Dates birthday={contact.birthday} dates={contact.dates} />
+                }
+                {
+                    (contact?.addresses) &&
+                    <Addresses addresses={contact.addresses} />
+                }
+            </ScrollView>
         </TabsSafeAreaView>
 
     );
@@ -71,9 +87,10 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
 
 const styles = StyleSheet.create({
     main: {
-        flex: 1,
         padding: 20,
         gap: 20,
+        paddingBottom: 10,
+        paddingTop: 0,
         // NOTE: This background color comes from the default tabs navigator (I think) a similar default color is "whitesmoke" 
         // although I'm sure at some point we will want to come in with our own colors
     },
@@ -105,6 +122,8 @@ const styles = StyleSheet.create({
         alignSelf: "stretch",
     },
     shareButton: {
-        alignSelf: "stretch"
+        alignSelf: "stretch",
+        paddingBottom: 0,
+        // backgroundColor: "#000", // For testing
     },
 });

@@ -6,7 +6,8 @@ export const CONTACT_FIELDS = [
     Contacts.Fields.Emails,
     Contacts.Fields.Addresses,
     Contacts.Fields.Birthday,
-    Contacts.Fields.SocialProfiles
+    Contacts.Fields.SocialProfiles,
+    Contacts.Fields.Dates
 ];
 
 const FILTER = [
