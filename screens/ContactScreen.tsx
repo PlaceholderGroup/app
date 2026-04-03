@@ -1,12 +1,11 @@
 import Addresses from "@/components/Addresses";
-import Avatar from "@/components/Avatar";
 import Dates from "@/components/Dates";
 import Emails from "@/components/Emails";
 import PhoneNumbers from "@/components/PhoneNumbers";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
-import ProfileCarousel from "@/components/ProfileCarousel";
 import Button from "@/components/Button";
+import ProfileCarousel from "@/components/ProfileCarousel";
 import TabsSafeAreaView from "@/components/TabsSafeAreaView";
 import { ContactsContext } from "@/contexts/ContactsContext";
 import { openLink } from "@/utils/link";
@@ -29,56 +28,58 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
 
     return (
         <TabsSafeAreaView style={{ flex: 1 }} >
-            <View style={styles.head}>
-                {
-                    (contact) &&
-                    <>
-                        <ProfileCarousel contact={contact} />
-                        <Text style={styles.name}>{contact.name}</Text>
+            <ScrollView showsVerticalScrollIndicator={false} bounces={true}>
+                <View style={styles.head}>
+                    {
+                        (contact) &&
+                        <>
+                            <ProfileCarousel contact={contact} />
+                            <Text style={styles.name}>{contact.name}</Text>
 
-                        {/* TODO: These need to be based on the primary phone/email, not just the first one. */}
-                        <View style={styles.buttons}>
-                            <Button icon="phone" disabled={!contact.phoneNumbers} onPress={() => {
-                                contact.phoneNumbers?.[0]?.number && openLink(contact.phoneNumbers?.[0]?.number, "tel");
+                            {/* TODO: These need to be based on the primary phone/email, not just the first one. */}
+                            <View style={styles.buttons}>
+                                <Button icon="phone" disabled={!contact.phoneNumbers} onPress={() => {
+                                    contact.phoneNumbers?.[0]?.number && openLink(contact.phoneNumbers?.[0]?.number, "tel");
+                                }} />
+                                <Button icon="chat-bubble" disabled={!contact.phoneNumbers} onPress={() => {
+                                    contact.phoneNumbers?.[0]?.number && openLink(contact.phoneNumbers?.[0]?.number, "sms");
+                                }} />
+                                <Button icon="videocam" disabled={!contact.phoneNumbers} onPress={() => {
+                                    contact.phoneNumbers?.[0]?.number && openLink(contact.phoneNumbers?.[0]?.number, "video");
+                                }} />
+                                <Button icon="email" disabled={!contact.emails} onPress={() => {
+                                    contact.emails?.[0]?.email && openLink(contact.emails?.[0]?.email, "email");
+                                }} />
+                            </View>
+                            <Button title="Share Contact" icon="share" type="tertiary" style={styles.shareButton} onPress={() => {
+                                router.navigate({
+                                    pathname: "/share/[id]",
+                                    params: {
+                                        id: contact.id,
+                                    }
+                                })
                             }} />
-                            <Button icon="chat-bubble" disabled={!contact.phoneNumbers} onPress={() => {
-                                contact.phoneNumbers?.[0]?.number && openLink(contact.phoneNumbers?.[0]?.number, "sms");
-                            }} />
-                            <Button icon="videocam" disabled={!contact.phoneNumbers} onPress={() => {
-                                contact.phoneNumbers?.[0]?.number && openLink(contact.phoneNumbers?.[0]?.number, "video");
-                            }} />
-                            <Button icon="email" disabled={!contact.emails} onPress={() => {
-                                contact.emails?.[0]?.email && openLink(contact.emails?.[0]?.email, "email");
-                            }} />
-                        </View>
-                        <Button title="Share Contact" icon="share" type="tertiary" style={styles.shareButton} onPress={() => {
-                            router.navigate({
-                                pathname: "/share/[id]",
-                                params: {
-                                    id: contact.id,
-                                }
-                            })
-                        }} />
-                    </>
-                }
-            </View>
-            <ScrollView style={styles.main} showsVerticalScrollIndicator={false} bounces={true} overScrollMode="never">
-                {
-                    (contact?.phoneNumbers) &&
-                    <PhoneNumbers phoneNumbers={contact.phoneNumbers} />
-                }
-                {
-                    (contact?.emails) &&
-                    <Emails emails={contact.emails} />
-                }
-                {
-                    (contact?.birthday || contact?.dates) &&
-                    <Dates birthday={contact.birthday} dates={contact.dates} />
-                }
-                {
-                    (contact?.addresses) &&
-                    <Addresses addresses={contact.addresses} />
-                }
+                        </>
+                    }
+                </View>
+                <View style={styles.main}>
+                    {
+                        (contact?.phoneNumbers) &&
+                        <PhoneNumbers phoneNumbers={contact.phoneNumbers} />
+                    }
+                    {
+                        (contact?.emails) &&
+                        <Emails emails={contact.emails} />
+                    }
+                    {
+                        (contact?.birthday || contact?.dates) &&
+                        <Dates birthday={contact.birthday} dates={contact.dates} />
+                    }
+                    {
+                        (contact?.addresses) &&
+                        <Addresses addresses={contact.addresses} />
+                    }
+                </View>
             </ScrollView>
         </TabsSafeAreaView>
 
@@ -88,9 +89,8 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
 const styles = StyleSheet.create({
     main: {
         padding: 20,
+        paddingTop: 10,
         gap: 20,
-        paddingBottom: 10,
-        paddingTop: 0,
         // NOTE: This background color comes from the default tabs navigator (I think) a similar default color is "whitesmoke" 
         // although I'm sure at some point we will want to come in with our own colors
     },

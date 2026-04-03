@@ -90,7 +90,6 @@ const styles = StyleSheet.create({
         fontStyle: "normal",
         fontWeight: "500",
         lineHeight: 16 * 1.15,
-        textTransform: "capitalize",
     },
     emailType: {
         alignSelf: "stretch",

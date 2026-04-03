@@ -11,7 +11,7 @@ function formatDate(date: Contacts.Date) {
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
   ];
-  const month = date.month ? months[date.month - 1] : "";
+  const month = date.month !== undefined ? months[date.month] : "";
   const day = date.day ?? "";
   const year = date.year ?? "";
   if (year) {
