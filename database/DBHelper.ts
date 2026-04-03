@@ -14,7 +14,7 @@ export interface profileObj {
     icon: string ,
     picture_link: string,
     fields: fields[],
-    contact: Contacts.ExistingContact
+    contact: Contacts.ExistingContact 
 }
 
 export interface fields{
@@ -96,6 +96,7 @@ export class DBHelper {
     // Make sure to set the contact using the contactCode in the contact field in the obj
     async getProfileObj(contactCode: string, profileId: number){
         const profile = await this.getProfile(contactCode, profileId)
+            
         
         const fields = await this.readAllFields(profile.profile_id)
         
