@@ -122,9 +122,14 @@ export class DBHelper {
 
     }
 
-    async getAllProfileObjIDs(contact_code:string){
-        const result = await this.getAllProfileIDs(contact_code)
-        return result
+    async getAllProfileObjs(contact_code:string):Promise<profileObj[]>{
+        let profileObjects:profileObj[] = []
+        const profileIDs = await this.getAllProfileIDs(contact_code)
+        for(const id of profileIDs){
+            profileObjects.push(await this.getProfileObj(contact_code, id))
+        }
+        return profileObjects
+        
     }
 
     async updateProfileObj(profile_id:number, name: string, icon: string, picture_link: string, fields:fields[]){
