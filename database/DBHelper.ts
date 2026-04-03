@@ -2,22 +2,22 @@ import * as Contacts from "expo-contacts";
 import * as SQLite from 'expo-sqlite';
 import { Platform } from "react-native";
  
-interface SocialObj {
+export interface SocialObj {
     social_field: string,
     link: string,
     service: string
 }
  
-interface profileObj {
+export interface profileObj {
     profile_id: number,
     name: string,
     icon: string ,
     picture_link: string,
     fields: fields[],
-    contact: Contacts.ExistingContact | undefined | string
+    contact: Contacts.ExistingContact
 }
 
-interface fields{
+export interface fields{
     field_name: string
     field_id: string
 }
@@ -107,22 +107,29 @@ export class DBHelper {
             profile.contact = returnedContact
             return profile
         }else{
-            const updatedContact = { ...returnedContact}
-            // Need to use the field.field_name to get the contact.field then get the specific one by field_id
-            for(const field of fields){
-                const fieldName = field.field_name as keyof typeof returnedContact
-                const fieldArray = returnedContact[fieldName] as any[]
-                const specificValue = fieldArray?.find(item => item.id === field.field_id);
-                (updatedContact as any)[fieldName] = specificValue ? [specificValue]:[];
+            const fields = await this.readAllFields(profile.profile_id);
 
-            }
-            profile.contact = updatedContact
-            return profile
+            const updatedContact = fields.reduce((acc, field) => {
+                const fieldName = field.field_name as keyof typeof returnedContact;
+                const fieldArray = returnedContact[fieldName];
+                const match = Array.isArray(fieldArray)
+                    ? fieldArray.find(item => item.id === field.field_id)
+                    : undefined;
+
+                (acc as any)[fieldName] = match ? [match] : [];
+                return acc;
+            }, {
+                firstName: returnedContact.firstName,
+                lastName: returnedContact.lastName,
+            } as typeof returnedContact);
+
+            profile.contact = updatedContact;
+            return profile;
         }
 
     }
 
-    async getAllProfileObjs(contact_code:string):Promise<profileObj[]>{
+    async getAllProfileObjs(contact_code:string){
         let profileObjects:profileObj[] = []
         const profileIDs = await this.getAllProfileIDs(contact_code)
         for(const id of profileIDs){
@@ -340,7 +347,7 @@ export class DBHelper {
                 icon: result.icon,
                 picture_link: result.picture_link,
                 fields: fields,
-                contact: result.contact_code
+                contact: contact
             };
         } catch (error) {
             console.log('Error when retrieving profile: ', error);
