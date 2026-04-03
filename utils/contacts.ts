@@ -9,6 +9,19 @@ export const CONTACT_FIELDS = [
     Contacts.Fields.SocialProfiles
 ];
 
+const FILTER = [
+    "Business Bearcat",
+    "Dr. Bearcut",
+    "Ballet Bearcat",
+    "Chef Bearcat",
+    "Standard Bearcat",
+    "Graduation Bearcat",
+    "Anne Ning",
+    "Jack Detrick",
+    "Jonah Carter",
+    "Kevin Long",
+]
+
 // TODO: The types on this are kind of ugly, I mostly just copied them from Intellisense type previews, they can probably be cleaned up
 export async function getContact(
     userId: string,
@@ -30,7 +43,7 @@ export async function getContacts(
             sort: Contacts.SortTypes.FirstName,
             fields: CONTACT_FIELDS
         });
-        setContacts?.(data);
+        setContacts?.(data.filter((contact) => FILTER.includes(contact.name)));
         return data;
     }
 };

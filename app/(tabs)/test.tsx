@@ -9,7 +9,7 @@ export default function TestScreen() {
         <TabsSafeAreaView>
             <View style={styles.body}>
                 <Button title="Request Bluetooth permissions" icon="bluetooth" onPress={requestBluetoothPermission} />
-                <Button title="Start advertising" icon="play-arrow" onPress={() => startSharing("Kevin Long")} />
+                <Button title="Start advertising" icon="play-arrow" onPress={() => startSharing("Kevin")} />
                 <Button title="Stop advertising" icon="stop" onPress={stopSharing} />
                 <Button title="Start scanning" icon="play-arrow" onPress={() => startScanning()} />
                 <Button title="Stop scanning" icon="stop" onPress={stopScanning} />

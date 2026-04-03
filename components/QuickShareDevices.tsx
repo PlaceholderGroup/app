@@ -1,5 +1,5 @@
 import QuickShareDevice from "@/components/QuickShareDevice";
-import { startScanning, stopScanning } from "@/utils/sharing";
+import { connectToDevice, startScanning, stopScanning } from "@/utils/sharing";
 import * as Bluetooth from 'munim-bluetooth';
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
@@ -9,6 +9,7 @@ export default function QuickShareDevices() {
 
     function handlePress(device: Bluetooth.BLEDevice) {
         console.log("Connect to:", device.id);
+        connectToDevice(device.id);
     }
 
     useEffect(() => {
