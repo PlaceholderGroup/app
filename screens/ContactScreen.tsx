@@ -1,7 +1,7 @@
-import Avatar from "@/components/Avatar";
 import PhoneNumbers from "@/components/PhoneNumbers";
 import { StyleSheet, Text, View } from "react-native";
 
+import ProfileCarousel from "@/components/ProfileCarousel";
 import Button from "@/components/Button";
 import TabsSafeAreaView from "@/components/TabsSafeAreaView";
 import { ContactsContext } from "@/contexts/ContactsContext";
@@ -29,7 +29,7 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
                 {
                     (contact) &&
                     <>
-                        <Avatar source={contact.image?.uri} size={192} name={contact.name} />
+                        <ProfileCarousel contact={contact} />
                         <Text style={styles.name}>{contact.name}</Text>
 
                         {/* TODO: These need to be based on the primary phone/email, not just the first one. */}
@@ -80,7 +80,11 @@ const styles = StyleSheet.create({
     head: {
         alignItems: "center",
         gap: 20,
-        padding: 20,
+        backgroundColor: "white",
+        paddingTop: 20,
+        paddingBottom: 20,
+        borderBottomWidth: 1,
+        borderColor: "lightgray",
     },
     avatar: {
         width: 192,

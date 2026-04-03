@@ -1,5 +1,5 @@
-import { Image } from "expo-image";
-import { DimensionValue, StyleSheet, Text, View } from "react-native";
+import { Image, ImageStyle } from "expo-image";
+import { DimensionValue, StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 
 const colors = ["red", "green", "blue"] as const;
 
@@ -8,7 +8,7 @@ function getColor(name: string): "red" | "green" | "blue" {
     return colors[index];
 }
 
-export default function Avatar({ name, size, source }: { name: string, size: DimensionValue, source?: string }) {
+export default function Avatar({ name, size, source, style, ...rest }: { name: string, size: DimensionValue, source?: string, style?: StyleProp<ViewStyle | ImageStyle> }) {
     const circle = {
         width: size,
         height: size,
@@ -20,11 +20,18 @@ export default function Avatar({ name, size, source }: { name: string, size: Dim
     }
     if (source) {
         return (
-            <Image style={[styles.avatar, circle]} source={source} />
+            <Image
+                {...rest}
+                style={[styles.avatar, circle, style as StyleProp<ImageStyle>]}
+                source={source}
+            />
         );
     }
     return (
-        <View style={[styles.avatar, styles[getColor(name)], circle]}>
+        <View
+            {...rest}
+            style={[styles.avatar, styles[getColor(name)], circle, style as StyleProp<ViewStyle>]}
+        >
             <Text style={[styles.initial, initial]}>{name.at(0)?.toUpperCase()}</Text>
         </View>
     );
