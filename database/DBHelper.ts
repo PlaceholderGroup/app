@@ -122,6 +122,11 @@ export class DBHelper {
 
     }
 
+    async getAllProfileObjIDs(contact_code:string){
+        const result = await this.getAllProfileIDs(contact_code)
+        return result
+    }
+
     async updateProfileObj(profile_id:number, name: string, icon: string, picture_link: string, fields:fields[]){
         const result = await this.updateProfile(profile_id, name, icon, picture_link)
         for(const field of fields){
@@ -297,6 +302,16 @@ export class DBHelper {
     }
 
     // Need to follow this template for ALL of the reads and ^ for all of the creates
+    private async getAllProfileIDs(contact_code: string): Promise<number[]> {
+        const query = `SELECT profile_id FROM profiles WHERE contact_code = ?`;
+        try {
+            const result = await this.db!.getAllAsync<number>(query, [contact_code]);
+            return result
+        }catch (error) {
+            console.log('Error when retrieving profile: ', error);
+            throw error;
+        }
+    }
  
     private async getProfile(contact_code: string, profile_id: number): Promise<profileObj> {
         const query = `SELECT * FROM profiles WHERE contact_code = ? AND profile_id = ?`;
