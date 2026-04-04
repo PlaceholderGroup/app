@@ -1,5 +1,6 @@
+import * as Contacts from "expo-contacts";
 
-
-export async function shareContact(e: any) {
-    return;
+export default {
+    startSharing: async (contact: Contacts.ExistingContact) => { },
+    stopSharing: async () => { },
 }

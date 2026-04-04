@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import { ContactsProvider } from "@/contexts/ContactsContext";
+import DBHelper from "@/database/DBHelper";
 import { getContacts } from "@/utils/contacts";
 import { Lexend_300Light, Lexend_400Regular, Lexend_500Medium, useFonts } from "@expo-google-fonts/lexend";
 import { DefaultTheme, ThemeProvider } from "@react-navigation/native";
@@ -22,6 +23,8 @@ export default function RootLayout() {
     const [contacts, setContacts] = useState<Array<Contacts.ExistingContact>>([]);
 
     const appState = useRef(AppState.currentState);
+
+    DBHelper.initDB();
 
     const [loaded, error] = useFonts({
         Lexend_300Light,
