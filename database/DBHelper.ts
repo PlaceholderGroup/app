@@ -14,7 +14,7 @@ export interface profileObj {
     icon: string ,
     picture_link: string,
     fields: fields[],
-    contact: Contacts.ExistingContact
+    contact: Contacts.ExistingContact 
 }
 
 export interface fields{
@@ -96,6 +96,7 @@ export class DBHelper {
     // Make sure to set the contact using the contactCode in the contact field in the obj
     async getProfileObj(contactCode: string, profileId: number){
         const profile = await this.getProfile(contactCode, profileId)
+            
         
         const fields = await this.readAllFields(profile.profile_id)
         
@@ -107,17 +108,24 @@ export class DBHelper {
             profile.contact = returnedContact
             return profile
         }else{
-            const updatedContact = { ...returnedContact}
-            // Need to use the field.field_name to get the contact.field then get the specific one by field_id
-            for(const field of fields){
-                const fieldName = field.field_name as keyof typeof returnedContact
-                const fieldArray = returnedContact[fieldName] as any[]
-                const specificValue = fieldArray?.find(item => item.id === field.field_id);
-                (updatedContact as any)[fieldName] = specificValue ? [specificValue]:[];
+            const fields = await this.readAllFields(profile.profile_id);
 
-            }
-            profile.contact = updatedContact
-            return profile
+            const updatedContact = fields.reduce((acc, field) => {
+                const fieldName = field.field_name as keyof typeof returnedContact;
+                const fieldArray = returnedContact[fieldName];
+                const match = Array.isArray(fieldArray)
+                    ? fieldArray.find(item => item.id === field.field_id)
+                    : undefined;
+
+                (acc as any)[fieldName] = match ? [match] : [];
+                return acc;
+            }, {
+                firstName: returnedContact.firstName,
+                lastName: returnedContact.lastName,
+            } as typeof returnedContact);
+
+            profile.contact = updatedContact;
+            return profile;
         }
 
     }
