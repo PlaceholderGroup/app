@@ -1,4 +1,4 @@
-import { HCESession, NFCTagType4, NFCTagType4NDEFContentType } from "react-native-hce";
+import { HCESession, NFCTagType4, NFCTagType4NDEFContentType } from "@placeholdergroup/react-native-hce";
 
 import * as Contacts from "expo-contacts";
 import { toVCard } from "./contacts";
@@ -19,13 +19,11 @@ async function startSharing(contact: Contacts.ExistingContact) {
         session = await HCESession.getInstance();
         session.setApplication(tag);
         await session.setEnabled(true);
-        console.log("Session started!");
     }
 }
 
 async function stopSharing() {
     await session?.setEnabled(false);
-    console.log("Session stopped!");
 }
 
 export default {
