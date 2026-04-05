@@ -1,12 +1,13 @@
 import { useRouter } from "expo-router";
+import { memo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Avatar from "./Avatar";
 
-export default function ContactsListitem({
+const ContactsListItem = memo(({
     name,
     photo,
     id
-}: { name: string, photo?: string, id: string }) {
+}: { name: string, photo?: string, id: string }) => {
     const router = useRouter();
 
     return (
@@ -18,18 +19,25 @@ export default function ContactsListitem({
         })}>
             <View style={styles.container}>
                 <Avatar source={photo} size={48} name={name} />
-                <Text>{name}</Text>
+                <Text style={styles.text}>{name}</Text>
             </View>
         </Pressable>
-    )
-}
+    );
+});
+
+export default ContactsListItem;
 
 const styles = StyleSheet.create({
     container: {
         flexDirection: "row",
-        gap: 20,
+        gap: 10,
         alignItems: "center",
-        paddingHorizontal: 10,
-        paddingVertical: 5
+        paddingHorizontal: 20,
+        paddingVertical: 5,
+        flex: 1,
+    },
+    text: {
+        wordWrap: "break-word",
+        flex: 1,
     },
 })
