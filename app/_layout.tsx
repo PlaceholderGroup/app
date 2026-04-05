@@ -1,6 +1,5 @@
 import Navbar from "@/components/Navbar";
 import { ContactsProvider } from "@/contexts/ContactsContext";
-import DBHelper from "@/database/DBHelper";
 import { getContacts } from "@/utils/contacts";
 import { Lexend_300Light, Lexend_400Regular, Lexend_500Medium, useFonts } from "@expo-google-fonts/lexend";
 import { DefaultTheme, ThemeProvider } from "@react-navigation/native";
@@ -9,6 +8,12 @@ import { SplashScreen, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
+
+type CustomHeaderOptions = {
+    showSearch?: boolean,
+    searchQuery?: string,
+    setSearchQuery?: (text: string) => void,
+}
 
 const Theme = {
     ...DefaultTheme,
@@ -24,7 +29,7 @@ export default function RootLayout() {
 
     const appState = useRef(AppState.currentState);
 
-    DBHelper.initDB();
+    // DBHelper.initDB();
 
     const [loaded, error] = useFonts({
         Lexend_300Light,
@@ -68,7 +73,17 @@ export default function RootLayout() {
                 <Stack screenOptions={{
                     headerShown: true,
                     header: ({ options, route, navigation }) => {
-                        return <Navbar onBack={navigation.goBack} canGoBack={navigation.canGoBack()} />
+                        // TODO: I don't love this, but it works well enough for now
+                        const customOptions = options as CustomHeaderOptions & typeof options;
+                        return (
+                            <Navbar
+                                onBack={navigation.goBack}
+                                canGoBack={navigation.canGoBack()}
+                                showSearch={customOptions.showSearch}
+                                searchQuery={customOptions.searchQuery}
+                                setSearchQuery={customOptions.setSearchQuery}
+                            />
+                        )
                     },
                     headerTransparent: true,
                 }}>

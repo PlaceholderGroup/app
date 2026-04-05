@@ -19,7 +19,7 @@ const ContactsListItem = memo(({
         })}>
             <View style={styles.container}>
                 <Avatar source={photo} size={48} name={name} />
-                <Text>{name}</Text>
+                <Text style={styles.text}>{name}</Text>
             </View>
         </Pressable>
     );
@@ -30,9 +30,14 @@ export default ContactsListItem;
 const styles = StyleSheet.create({
     container: {
         flexDirection: "row",
-        gap: 20,
+        gap: 10,
         alignItems: "center",
-        paddingHorizontal: 10,
+        paddingHorizontal: 20,
         paddingVertical: 5,
+        flex: 1,
+    },
+    text: {
+        wordWrap: "break-word",
+        flex: 1,
     },
 })
