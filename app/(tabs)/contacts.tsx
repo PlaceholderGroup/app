@@ -1,16 +1,37 @@
 import { SectionList, StyleSheet, Text, View } from "react-native";
 
 import ContactsListitem from "@/components/ContactsListItem";
-import SearchBar from "@/components/SearchBar";
 import TabsSafeAreaView from "@/components/TabsSafeAreaView";
 import { ContactsContext } from "@/contexts/ContactsContext";
 import * as Contacts from "expo-contacts";
+import { useFocusEffect, useNavigation } from "expo-router";
 import { useCallback, useContext, useMemo, useState } from "react";
 
 export default function ContactsScreen() {
 
+    const navigation = useNavigation();
     const { contacts } = useContext(ContactsContext);
     const [searchQuery, setSearchQuery] = useState<string>("");
+
+    useFocusEffect(
+        useCallback(() => {
+            const root = navigation.getParent();
+
+            root?.setOptions({
+                showSearch: true,
+                searchQuery,
+                setSearchQuery,
+            });
+
+            return () => {
+                root?.setOptions({
+                    showSearch: false,
+                    searchQuery: undefined,
+                    setSearchQuery: null,
+                });
+            }
+        }, [navigation, searchQuery])
+    );
 
     const sections = useMemo(() => {
         if (contacts) {
@@ -69,11 +90,6 @@ export default function ContactsScreen() {
     // https://reactnative.dev/docs/sectionlist
     return (
         <TabsSafeAreaView>
-            <View style={styles.searchContainer}>
-                {/* TODO: Can I put this in the Navbar? Or at least make it look like it is? */}
-                <SearchBar placeholder="Search contacts" value={searchQuery} onChangeText={setSearchQuery} />
-            </View>
-
             {contacts !== undefined &&
                 <SectionList
                     sections={sections}
@@ -98,10 +114,11 @@ const styles = StyleSheet.create({
         alignSelf: "stretch",
     },
     header: {
-        marginVertical: 10,
+        marginVertical: 20,
     },
     headerLabel: {
         fontFamily: "Lexend_400Regular",
+        fontWeight: 400,
     },
     contact: {
         display: "flex",
@@ -122,7 +139,4 @@ const styles = StyleSheet.create({
         borderBottomRightRadius: 20,
         paddingBottom: 10,
     },
-    searchContainer: {
-        padding: 20,
-    }
 })
