@@ -220,6 +220,6 @@ export function toVCard(contact: Contacts.ExistingContact): string {
 
     if (contact.note) vCard.push(formatProperty("NOTE", contact.note));
 
-    vCard.push("END");
+    vCard.push("END:VCARD");
     return vCard.join("\n");
 };

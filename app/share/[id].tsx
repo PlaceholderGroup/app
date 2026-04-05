@@ -2,6 +2,7 @@ import Avatar from "@/components/Avatar";
 import QuickShareDevices from "@/components/QuickShareDevices";
 import TabsSafeAreaView from "@/components/TabsSafeAreaView";
 import { getContact, toVCard } from "@/utils/contacts";
+import NFC from "@/utils/NFC";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as Contacts from "expo-contacts";
 import { useLocalSearchParams } from "expo-router";
@@ -18,6 +19,18 @@ export default function Sharing() {
     useEffect(() => {
         getContact(id, setContact);
     }, [id]);
+
+    useEffect(() => {
+        if (Platform.OS === "android") {
+            if (contact) {
+                NFC.startSharing(contact);
+            }
+        }
+
+        return () => {
+            if (Platform.OS === "android") NFC.stopSharing();
+        }
+    }, [contact]);
 
     return (
         // TODO: I don't like listing this manually here. That's what creating the TabsSafeAreaView component was supposed to avoid
