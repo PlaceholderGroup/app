@@ -46,7 +46,6 @@ export default function ProfileCarousel({ contact, onProfileFocus }: { contact: 
   }, [contact])
 
 
-  // for (ids in listID){getProfileObj(contactID,profileID).push profiles}
   //const profileContacts = [contact, contact, contact, contact];
   ////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -29,12 +29,14 @@ export const CONTACT_FIELDS = [
 export async function syncContacts() {
     const contacts = await getContacts() || [];
 
+    console.log("here");
     // TODO: This is obviously bad.
     await retryUntilTrue(DBHelper.getDBStatus);
+    console.log("again");
 
     try {
         const existing = (await DBHelper.getAllContacts() as any[]).map((contact: { contact_code: string }) => contact.contact_code);
-
+        console.log(existing);
         for (const contact of contacts) {
             if (contact.id && !existing.includes(contact.id)) {
                 await DBHelper.createContactObj(contact);

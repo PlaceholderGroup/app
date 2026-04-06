@@ -8,7 +8,9 @@ import Button from "@/components/Button";
 import ProfileCarousel from "@/components/ProfileCarousel";
 import TabsSafeAreaView from "@/components/TabsSafeAreaView";
 import { ContactsContext } from "@/contexts/ContactsContext";
+import DBHelper from "@/database/DBHelper";
 import { deduplicate } from "@/utils/contacts";
+import { retryUntilTrue } from "@/utils/hacks";
 import { openLink } from "@/utils/link";
 import * as Contacts from "expo-contacts";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -20,6 +22,19 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
 
     const { setCurrentContact } = useContext(ContactsContext);
 
+    //Create Mock Profiles
+
+    useEffect(() => {
+        (async () => {
+            console.log("Hi there");
+            await retryUntilTrue(DBHelper.getDBStatus);
+            console.log("Hi");
+            await DBHelper.createProfileObj(contact.id, "Business", "work", contact.image?.uri || "", [{field_name: "phoneNumbers", field_id: "2916"}])
+            await DBHelper.createProfileObj(contact.id, "Social", "personal", contact.image?.uri || "", [{field_name: "phoneNumbers", field_id: "2929"}])
+            await DBHelper.createProfileObj(contact.id, "Culinary", "cooking", contact.image?.uri || "", [{field_name: "phoneNumbers", field_id: "2923"}])
+        })();
+    }, [contact]);
+    
     useFocusEffect(
         useCallback(() => {
             setCurrentContact(contact.id);
@@ -30,6 +45,8 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
     useEffect(() => {
         if (contact) {
             deduplicate(contact);
+    console.log(contact);
+
         }
     }, [contact])
 
