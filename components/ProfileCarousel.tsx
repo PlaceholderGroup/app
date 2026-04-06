@@ -1,6 +1,6 @@
-import DBHelper from "@/database/DBHelper";
+import { profileObj } from "@/database/DBHelper";
 import * as Contacts from "expo-contacts";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { Animated, Dimensions, StyleSheet, View } from "react-native";
 import Avatar from "./Avatar";
 
@@ -12,39 +12,11 @@ const FULL_ITEM_SIZE = ITEM_SIZE + SPACING * 2;
 
 const SIDE_SPACING = (width - ITEM_SIZE) / 2;
 
-export default function ProfileCarousel({ contact, onProfileFocus }: { contact: Contacts.ExistingContact; onProfileFocus?: (profile: Contacts.ExistingContact, index: number) => void }) {
+export default function ProfileCarousel({ profiles, onProfileFocus, setProfileIndex }: { profiles: profileObj[]; onProfileFocus?: (profile: Contacts.ExistingContact, index: number) => void; setProfileIndex: React.Dispatch<React.SetStateAction<number>> }) {
   const scrollX = useRef(new Animated.Value(0)).current;
 
   // Track previously focused index to prevent duplicate calls
   const currentIndex = useRef(0);
-
-  ///// THIS IS GARBAGE MOCK DATA REPLACE WITH REAL PROFILES AS SOON AS THEY ARE IMPLEMENTED /////
-
-  const [profileContacts, setProfileContacts] = useState<Contacts.ExistingContact[]>([]);
-
-  useEffect(() => {
-    if (DBHelper.getDBStatus()) {
-      const profileList = DBHelper.getAllProfileObjs(contact.id);
-      profileList.then(profileList => {
-        const profiles: Contacts.ExistingContact[] = [];
-        profileList.forEach(profile => {
-          if (profile.contact !== undefined) {
-            if (profile.contact.image === undefined) {
-              profile.contact.image = { uri: profile.picture_link }
-            }
-            else {
-              profile.contact.image.uri = profile.picture_link;
-            }
-            profiles.push(profile.contact);
-          }
-        });
-        setProfileContacts(profiles);
-      });
-    } else {
-      console.log("DB not ready");
-    }
-  }, [contact])
-
 
   //const profileContacts = [contact, contact, contact, contact];
   ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -69,9 +41,9 @@ export default function ProfileCarousel({ contact, onProfileFocus }: { contact: 
       if (index !== currentIndex.current) {
         currentIndex.current = index;
 
-        const focusedProfile = profileContacts[index];
+        const focusedProfile = profiles[index];
         if (focusedProfile) {
-          _onProfileFocus(focusedProfile, index);
+          _onProfileFocus(focusedProfile.contact, index);
         }
       }
     });
@@ -79,12 +51,12 @@ export default function ProfileCarousel({ contact, onProfileFocus }: { contact: 
     return () => {
       scrollX.removeListener(listener);
     };
-  }, [scrollX, profileContacts]);
+  }, [scrollX, profiles]);
 
   return (
     <View style={styles.carousel}>
       <Animated.FlatList
-        data={profileContacts}
+        data={profiles}
         keyExtractor={(_, i) => i.toString()}
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -129,9 +101,9 @@ export default function ProfileCarousel({ contact, onProfileFocus }: { contact: 
               ]}
             >
               <Avatar
-                source={item.image?.uri}
+                source={item.contact.image?.uri}
                 size={ITEM_SIZE}
-                name={item.name}
+                name={item.contact.name}
               />
             </Animated.View>
           );

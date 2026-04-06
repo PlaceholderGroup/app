@@ -29,14 +29,11 @@ export const CONTACT_FIELDS = [
 export async function syncContacts() {
     const contacts = await getContacts() || [];
 
-    console.log("here");
     // TODO: This is obviously bad.
-    await retryUntilTrue(DBHelper.getDBStatus);
-    console.log("again");
+    await retryUntilTrue(() => DBHelper.getDBStatus());
 
     try {
         const existing = (await DBHelper.getAllContacts() as any[]).map((contact: { contact_code: string }) => contact.contact_code);
-        console.log(existing);
         for (const contact of contacts) {
             if (contact.id && !existing.includes(contact.id)) {
                 await DBHelper.createContactObj(contact);
@@ -70,21 +67,21 @@ export function deduplicate(contact: Contacts.ExistingContact): Contacts.Existin
     if (contact.phoneNumbers) {
         contact.phoneNumbers = filterUnique(
             contact.phoneNumbers,
-            (phoneNumber) => `${phoneNumber.number?.replaceAll(/\D/gm, "")}:${phoneNumber.label}`
+            (phoneNumber) => `${phoneNumber.number?.replaceAll(/\D/gm, "")}:${phoneNumber.label.toUpperCase()}`
         );
     }
 
     if (contact.emails) {
         contact.emails = filterUnique(
             contact.emails,
-            (email) => `${email.email}:${email.label}`
+            (email) => `${email.email}:${email.label.toUpperCase()}`
         );
     }
 
     if (contact.urlAddresses) {
         contact.urlAddresses = filterUnique(
             contact.urlAddresses,
-            (urlAddress) => `${urlAddress.url}:${urlAddress.label}`
+            (urlAddress) => `${urlAddress.url}:${urlAddress.label.toUpperCase()}`
         );
     }
 
@@ -98,7 +95,7 @@ export function deduplicate(contact: Contacts.ExistingContact): Contacts.Existin
     if (contact.dates) {
         contact.dates = filterUnique(
             contact.dates,
-            (date) => `${date.year}:${date.month}:${date.day}:${date.label}`
+            (date) => `${date.year}:${date.month}:${date.day}:${date.label.toUpperCase()}`
         );
     }
 
@@ -119,7 +116,7 @@ export function deduplicate(contact: Contacts.ExistingContact): Contacts.Existin
     if (contact.relationships) {
         contact.relationships = filterUnique(
             contact.relationships,
-            (relationship) => `${relationship.name}:${relationship.label}`
+            (relationship) => `${relationship.name}:${relationship.label.toUpperCase()}`
         );
     }
 
