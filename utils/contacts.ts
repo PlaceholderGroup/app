@@ -52,6 +52,78 @@ export async function syncContacts() {
     }
 }
 
+export function deduplicate(contact: Contacts.ExistingContact): Contacts.ExistingContact {
+    function filterUnique(objects: any[] | undefined, toString: (object: any) => any): any[] | undefined {
+        let seen = new Set();
+        return objects?.filter((object) => {
+            const value = toString(object);
+            if (!seen.has(value)) {
+                seen.add(value);
+                return true;
+            }
+            return false;
+        })
+    }
+
+    if (contact.phoneNumbers) {
+        contact.phoneNumbers = filterUnique(
+            contact.phoneNumbers,
+            (phoneNumber) => `${phoneNumber.number?.replaceAll(/\D/gm, "")}:${phoneNumber.label}`
+        );
+    }
+
+    if (contact.emails) {
+        contact.emails = filterUnique(
+            contact.emails,
+            (email) => `${email.email}:${email.label}`
+        );
+    }
+
+    if (contact.urlAddresses) {
+        contact.urlAddresses = filterUnique(
+            contact.urlAddresses,
+            (urlAddress) => `${urlAddress.url}:${urlAddress.label}`
+        );
+    }
+
+    if (contact.addresses) {
+        contact.addresses = filterUnique(
+            contact.addresses,
+            (address) => `${address.poBox}:${address.street}:${address.city}:${address.region}:${address.postalCode}:${address.country}`
+        );
+    }
+
+    if (contact.dates) {
+        contact.dates = filterUnique(
+            contact.dates,
+            (date) => `${date.year}:${date.month}:${date.day}:${date.label}`
+        );
+    }
+
+    if (contact.socialProfiles) {
+        contact.socialProfiles = filterUnique(
+            contact.socialProfiles,
+            (socialProfile) => `${socialProfile.service}:${socialProfile.url}:${socialProfile.username}`
+        );
+    }
+
+    if (contact.instantMessageAddresses) {
+        contact.instantMessageAddresses = filterUnique(
+            contact.instantMessageAddresses,
+            (address) => `${address.service}:${address.username}`
+        );
+    }
+
+    if (contact.relationships) {
+        contact.relationships = filterUnique(
+            contact.relationships,
+            (relationship) => `${relationship.name}:${relationship.label}`
+        );
+    }
+
+    return contact;
+};
+
 // TODO: The types on this are kind of ugly, I mostly just copied them from Intellisense type previews, they can probably be cleaned up
 export async function getContact(
     userId: string,
@@ -116,6 +188,8 @@ export function toVCard(contact: Contacts.ExistingContact): string {
         value = [value].flat();
         return `${property}:${value.map(escape).join(";")}`;
     };
+
+    deduplicate(contact);
 
     // NOTE: I'm using v3.0 here because I don't know that most of the apps support v4.0 yet
     const vCard = [
