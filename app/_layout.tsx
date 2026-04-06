@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar";
 import { ContactsProvider } from "@/contexts/ContactsContext";
-import { getContacts } from "@/utils/contacts";
+import DBHelper from "@/database/DBHelper";
+import { getContacts, syncContacts } from "@/utils/contacts";
 import { Lexend_300Light, Lexend_400Regular, Lexend_500Medium, useFonts } from "@expo-google-fonts/lexend";
 import { DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import * as Contacts from "expo-contacts";
@@ -8,6 +9,7 @@ import { SplashScreen, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
+
 
 type CustomHeaderOptions = {
     showSearch?: boolean,
@@ -26,10 +28,9 @@ const Theme = {
 export default function RootLayout() {
 
     const [contacts, setContacts] = useState<Array<Contacts.ExistingContact>>([]);
+    const [isDBReady, setIsDBReady] = useState<boolean>(false);
 
     const appState = useRef(AppState.currentState);
-
-    // DBHelper.initDB();
 
     const [loaded, error] = useFonts({
         Lexend_300Light,
@@ -38,10 +39,22 @@ export default function RootLayout() {
     })
 
     useEffect(() => {
-        if (loaded || error) {
+        if ((isDBReady && loaded) || error) {
             SplashScreen.hideAsync();
         }
-    }, [loaded, error]);
+    }, [isDBReady, loaded, error]);
+
+    useEffect(() => {
+        (async () => {
+            try {
+                await DBHelper.initDB();
+                await syncContacts();
+                setIsDBReady(true);
+            } catch (error) {
+                console.error(error);
+            }
+        })();
+    }, []);
 
     useEffect(() => {
         getContacts(setContacts);

@@ -1,4 +1,6 @@
+import DBHelper from "@/database/DBHelper";
 import * as Contacts from "expo-contacts";
+import { retryUntilTrue } from "./hacks";
 
 export const CONTACT_FIELDS = [
     Contacts.Fields.RawImage,
@@ -23,6 +25,32 @@ export const CONTACT_FIELDS = [
 //     "Kevin Long",
 //     "Mom",
 // ]
+
+export async function syncContacts() {
+    const contacts = await getContacts() || [];
+
+    // TODO: This is obviously bad.
+    await retryUntilTrue(DBHelper.getDBStatus);
+
+    try {
+        const existing = (await DBHelper.getAllContacts() as any[]).map((contact: { contact_code: string }) => contact.contact_code);
+
+        for (const contact of contacts) {
+            if (contact.id && !existing.includes(contact.id)) {
+                await DBHelper.createContactObj(contact);
+                await DBHelper.createProfileObj(
+                    contact.id,
+                    "Stock",
+                    "home",
+                    contact.image?.uri || "",
+                    [],
+                );
+            }
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
 
 // TODO: The types on this are kind of ugly, I mostly just copied them from Intellisense type previews, they can probably be cleaned up
 export async function getContact(
