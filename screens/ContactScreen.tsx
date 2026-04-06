@@ -8,10 +8,11 @@ import Button from "@/components/Button";
 import ProfileCarousel from "@/components/ProfileCarousel";
 import TabsSafeAreaView from "@/components/TabsSafeAreaView";
 import { ContactsContext } from "@/contexts/ContactsContext";
+import { deduplicate } from "@/utils/contacts";
 import { openLink } from "@/utils/link";
 import * as Contacts from "expo-contacts";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useContext } from "react";
+import { useCallback, useContext, useEffect } from "react";
 
 
 export default function ContactScreen({ contact }: { contact: Contacts.ExistingContact }) {
@@ -25,6 +26,12 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
             return () => setCurrentContact(undefined);
         }, [contact.id])
     );
+
+    useEffect(() => {
+        if (contact) {
+            deduplicate(contact);
+        }
+    }, [contact])
 
     return (
         <TabsSafeAreaView style={{ flex: 1 }} >

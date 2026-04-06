@@ -125,8 +125,12 @@ export class DBHelper {
                 (acc as any)[fieldName] = match ? [match] : [];
                 return acc;
             }, {
-                firstName: returnedContact.firstName,
-                lastName: returnedContact.lastName,
+                name: returnedContact.name,
+                namePrefix: returnedContact.namePrefix,
+                nameSuffix: returnedContact.nameSuffix,
+                nickname: returnedContact.nickname,
+                maidenName: returnedContact.maidenName,
+                middleName: returnedContact.middleName,
             } as typeof returnedContact);
 
             profile.contact = updatedContact;
