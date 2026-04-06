@@ -28,6 +28,7 @@ export default function ProfileCarousel({ profiles, onProfileFocus, setProfileIn
     index: number
   ) => {
     onProfileFocus?.(profile, index);
+    setProfileIndex(index);
     console.log("Focused profile:", profile.name, "at index:", index);
     // TODO: Add logic here
   };
