@@ -1,36 +1,36 @@
 import * as Contacts from "expo-contacts";
 import * as SQLite from 'expo-sqlite';
 import { Platform } from "react-native";
- 
+
 export interface SocialObj {
     social_field: string,
     link: string,
     service: string
 }
- 
+
 export interface profileObj {
     profile_id: number,
     name: string,
-    icon: string ,
+    icon: string,
     picture_link: string,
     fields: fields[],
-    contact: Contacts.ExistingContact 
+    contact: Contacts.ExistingContact
 }
 
-export interface fields{
+export interface fields {
     field_name: string
     field_id: string
 }
- 
+
 export class DBHelper {
- 
+
     // -------------------------------------------------------------------------
     // PUBLIC API
     // -------------------------------------------------------------------------
- 
+
     async getContactObj(id: string): Promise<Contacts.ExistingContact | undefined> {
         const contact = await Contacts.getContactByIdAsync(id);
- 
+
         if (contact) {
             if (Platform.OS !== "ios") {
                 const socialProfiles = await this.getAllSocialObj(id);
@@ -49,20 +49,25 @@ export class DBHelper {
                 }
             }
         }
- 
+
         return contact;
     }
- 
-    async createContactObj(incomingContact: Contacts.Contact): Promise<Contacts.Contact> {
+
+    async createContactObj(incomingContact: Contacts.Contact | Contacts.ExistingContact): Promise<Contacts.Contact> {
         const result = incomingContact;
-        const contactCode = await Contacts.addContactAsync(incomingContact);
- 
+        let contactCode;
+        if ("id" in incomingContact) {
+            contactCode = incomingContact.id;
+        } else {
+            contactCode = await Contacts.addContactAsync(incomingContact);
+        }
+
         await this.createContact(contactCode);
- 
+
         if (incomingContact.isFavorite) {
             await this.createIsFavorite(contactCode);
         }
- 
+
         if (incomingContact.socialProfiles) {
             for (const object of incomingContact.socialProfiles) {
                 if (object.service && object.url) {
@@ -70,12 +75,12 @@ export class DBHelper {
                 }
             }
         }
- 
+
         return result;
     }
 
     // Just run expo update contact function.
-    async updateContactObj(incomingContact: Contacts.ExistingContact): Promise<string>{
+    async updateContactObj(incomingContact: Contacts.ExistingContact): Promise<string> {
         return Contacts.updateContactAsync(incomingContact)
 
     }
@@ -85,29 +90,29 @@ export class DBHelper {
     }
 
     // Need to know how we need to retrieve the contact. Should we need you to get the profile object to return one?
-    async createProfileObj(contactCode: string, name: string, icon: string, picture_link : string, fields: fields[]): Promise<profileObj>{
+    async createProfileObj(contactCode: string, name: string, icon: string, picture_link: string, fields: fields[]): Promise<profileObj> {
         const result = await this.createProfile(contactCode, name, icon, picture_link)
-        for(const field of fields){
+        for (const field of fields) {
             await this.createFields(result.profile_id, field.field_name, field.field_id)
         }
         return result
 
     }
     // Make sure to set the contact using the contactCode in the contact field in the obj
-    async getProfileObj(contactCode: string, profileId: number){
+    async getProfileObj(contactCode: string, profileId: number) {
         const profile = await this.getProfile(contactCode, profileId)
-            
-        
+
+
         const fields = await this.readAllFields(profile.profile_id)
-        
-        
+
+
         // Grab contact this profile refers to.
         const returnedContact = await Contacts.getContactByIdAsync(contactCode);
         if (!returnedContact) throw new Error('Contact not found.');
-        if (profile.name == "Stock"){
+        if (profile.name == "Stock") {
             profile.contact = returnedContact
             return profile
-        }else{
+        } else {
             const fields = await this.readAllFields(profile.profile_id);
 
             const updatedContact = fields.reduce((acc, field) => {
@@ -130,77 +135,84 @@ export class DBHelper {
 
     }
 
-    async getAllProfileObjs(contact_code:string){
-        let profileObjects:profileObj[] = []
-        const profileIDs = await this.getAllProfileIDs(contact_code)
-        for(const id of profileIDs){
+    async getAllProfileObjs(contact_code: string): Promise<profileObj[]> {
+        let profileObjects: profileObj[] = [];
+        const profileIDs = (await this.getAllProfileIDs(contact_code) as any[]).map((id) => id.profile_id);
+        for (const id of profileIDs) {
             profileObjects.push(await this.getProfileObj(contact_code, id))
         }
         return profileObjects
-        
+
     }
 
-    async updateProfileObj(profile_id:number, name: string, icon: string, picture_link: string, fields:fields[]){
+    async updateProfileObj(profile_id: number, name: string, icon: string, picture_link: string, fields: fields[]) {
         const result = await this.updateProfile(profile_id, name, icon, picture_link)
-        for(const field of fields){
+        for (const field of fields) {
             await this.updateField(profile_id, field.field_name, field.field_id)
         }
         return result
     }
 
-    async deleteProfileObj(profile_id: number){
+    async deleteProfileObj(profile_id: number) {
         const result = await this.deleteProfile(profile_id)
         return result
 
     }
- 
+
     async createSocialObj(contactCode: string, label: string, service: string, link: string): Promise<Contacts.SocialProfile> {
         await this.createSocialFields(contactCode, label, service, link);
         const result: Contacts.SocialProfile = { label: label, url: link };
         return result;
     }
- 
+
     async getSocialObj(contactCode: string, socialField: string) {
         return await this.getSingleSocialField(contactCode, socialField);
     }
- 
+
     async getAllSocialObj(contactCode: string): Promise<Array<SocialObj>> {
         return await this.getSocialFields(contactCode);
     }
- 
+
     async updateSocialObj(contactCode: string, oldSocialField: string, newSocialField: string, link: string): Promise<SocialObj> {
         await this.updateSocialField(contactCode, oldSocialField, newSocialField, link);
         return this.getSingleSocialField(contactCode, newSocialField);
     }
- 
 
- 
+
+
     async deleteSocialObj(contactCode: string, socialField: string): Promise<number> {
         return this.deleteSocialField(contactCode, socialField);
     }
- 
+
     // -------------------------------------------------------------------------
     // PRIVATE: DB Setup
     // -------------------------------------------------------------------------
- 
+
     private db: SQLite.SQLiteDatabase | null;
- 
+    private isReady: boolean = false;
+
     constructor() {
         this.db = null;
     }
- 
+
+    getDBStatus(): boolean {
+        return this?.isReady;
+    }
+
     async initDB(): Promise<void> {
         try {
+            if (this.isReady) return;
             this.db = await SQLite.openDatabaseAsync('contactsDB.db');
             await this.db.execAsync('PRAGMA foreign_keys = ON;');
             console.log('DB created successfully.');
             await this.createTables();
+            this.isReady = true;
         } catch (error) {
             console.log('Error when creating DB: ', error);
             throw error;
         }
     }
- 
+
     private async createTables(): Promise<void> {
         const queries: string[] = [
             `CREATE TABLE IF NOT EXISTS contacts(
@@ -243,7 +255,7 @@ export class DBHelper {
             throw error;
         }
     }
- 
+
     private async closeDB(): Promise<void> {
         if (this.db) {
             await this.db.closeAsync();
@@ -254,44 +266,46 @@ export class DBHelper {
     // -------------------------------------------------------------------------
     // PRIVATE: fields table
     // -------------------------------------------------------------------------
-    private async createFields(profile_id: number, field_name: string, field_id: string): Promise<number>{
+    private async createFields(profile_id: number, field_name: string, field_id: string): Promise<number> {
         const query = `INSERT INTO fields (profile_id, field_name, field_id) VALUES (?, ?, ?) RETURNING field_id`;
-        try{
-            const result = await this.db!.getFirstAsync<{profile_id: number}>(query, [profile_id,field_name,field_id])
+        try {
+            const result = await this.db!.getFirstAsync<{ profile_id: number }>(query, [profile_id, field_name, field_id])
             if (!result) throw new Error('Failed to create profile: No result returned.');
             return result.profile_id;
         } catch (error) {
             console.log('Error when creating field: ', error);
             throw error;
-    }}
+        }
+    }
 
-    private async readAllFields(profile_id: number): Promise<fields[]>{
+    private async readAllFields(profile_id: number): Promise<fields[]> {
         const query = `SELECT * FROM fields WHERE profile_id = ?`;
-        try{
-            const returnedFields:fields[] = await this.db!.getAllAsync<fields>(query, [profile_id])
+        try {
+            const returnedFields: fields[] = await this.db!.getAllAsync<fields>(query, [profile_id])
             if (!returnedFields) throw new Error('Failed to read fields: No result returned.');
             return returnedFields;
-            } catch (error) {
+        } catch (error) {
             console.log('Error when reading field:s ', error);
             throw error;
-    }}
+        }
+    }
 
-    private async updateField(profile_id: number,field_name: string, field_id: string){
+    private async updateField(profile_id: number, field_name: string, field_id: string) {
         const query = `UPDATE fields SET field_name = ?, field_id = ? WHERE profile_id = ?`;
-        try{
+        try {
             const result = await this.db!.runAsync(query, [field_name, field_id, profile_id])
             return result.changes;
-        }catch(error){
+        } catch (error) {
             console.log('Error when updating field: ', error);
             throw error;
         }
     }
 
-    private async deleteField(profile_id: number, field_name: string, field_id: string): Promise<number>{
+    private async deleteField(profile_id: number, field_name: string, field_id: string): Promise<number> {
         const query = `DELETE FROM fields WHERE profile_id = ? AND field_name = ? AND field_id = ?`;
-        try{
+        try {
             const result = await this.db!.runAsync(query, [profile_id, field_name, field_id])
-        return result.changes;
+            return result.changes;
         } catch (error) {
             console.log('Error when deleting field: ', error);
             throw error;
@@ -301,11 +315,11 @@ export class DBHelper {
     // -------------------------------------------------------------------------
     // PRIVATE: profiles table
     // -------------------------------------------------------------------------
- 
-    private async createProfile(contact_code: string, name: string, icon: string, picture_link : string): Promise<profileObj> {
-        const query = `INSERT INTO profiles (contact_code, name, icon, picture_link) VALUES (?, ?, ?, ?) RETURNING name`;
+
+    private async createProfile(contact_code: string, name: string, icon: string, picture_link: string): Promise<profileObj> {
+        const query = `INSERT INTO profiles (contact_code, name, icon, picture_link) VALUES (?, ?, ?, ?) RETURNING profile_id`;
         try {
-            const result = await this.db!.getFirstAsync<{profile_id: number}>(query, [contact_code, name, icon, picture_link]);
+            const result = await this.db!.getFirstAsync<{ profile_id: number }>(query, [contact_code, name, icon, picture_link]);
             if (!result) throw new Error('Failed to create profile: No result returned.');
             return this.getProfile(contact_code, result.profile_id);
         } catch (error) {
@@ -320,12 +334,12 @@ export class DBHelper {
         try {
             const result = await this.db!.getAllAsync<number>(query, [contact_code]);
             return result
-        }catch (error) {
+        } catch (error) {
             console.log('Error when retrieving profile: ', error);
             throw error;
         }
     }
- 
+
     private async getProfile(contact_code: string, profile_id: number): Promise<profileObj> {
         const query = `SELECT * FROM profiles WHERE contact_code = ? AND profile_id = ?`;
         try {
@@ -355,8 +369,8 @@ export class DBHelper {
             throw error;
         }
     }
- 
-    private async updateProfile(profile_id: number, name: string, icon: string, picture_link : string): Promise<number> {
+
+    private async updateProfile(profile_id: number, name: string, icon: string, picture_link: string): Promise<number> {
         const query = `UPDATE profiles SET name = ?, icon = ?, picture_link = ? WHERE profile_id = ?`;
         try {
             const result = await this.db!.runAsync(query, [name, icon, picture_link, profile_id]);
@@ -367,7 +381,7 @@ export class DBHelper {
             throw error;
         }
     }
- 
+
     private async deleteProfile(profile_id: number): Promise<number> {
         const query = `DELETE FROM profiles WHERE profile_id = ?`;
         try {
@@ -378,15 +392,15 @@ export class DBHelper {
             throw error;
         }
     }
- 
+
     // -------------------------------------------------------------------------
     // PRIVATE: contacts table
     // -------------------------------------------------------------------------
- 
+
     private async createContact(contact_code: string): Promise<string> {
         const query = `INSERT INTO contacts (contact_code) VALUES (?) RETURNING contact_code`;
         try {
-            const result = await this.db!.getFirstAsync<{contact_code: string}>(query, [contact_code]);
+            const result = await this.db!.getFirstAsync<{ contact_code: string }>(query, [contact_code]);
             if (!result) throw new Error('Failed to create contact: No result returned.');
             return result.contact_code;
         } catch (error) {
@@ -394,7 +408,7 @@ export class DBHelper {
             throw error;
         }
     }
- 
+
     private async getContact(contact_code: string): Promise<string> {
         const query = `SELECT * FROM contacts WHERE contact_code = ?`;
         try {
@@ -406,8 +420,8 @@ export class DBHelper {
             throw error;
         }
     }
- 
-    private async getAllContacts(): Promise<Array<string>> {
+
+    async getAllContacts(): Promise<Array<string>> {
         const query = `SELECT * FROM contacts`;
         try {
             return await this.db!.getAllAsync<string>(query);
@@ -416,7 +430,7 @@ export class DBHelper {
             throw error;
         }
     }
- 
+
     private async deleteContact(contact_code: string): Promise<number> {
         const query = `DELETE FROM contacts WHERE contact_code = ?`;
         try {
@@ -427,11 +441,11 @@ export class DBHelper {
             throw error;
         }
     }
- 
+
     // -------------------------------------------------------------------------
     // PRIVATE: is_favorite table
     // -------------------------------------------------------------------------
- 
+
     private async createIsFavorite(contact_code: string): Promise<string> {
         const query = `INSERT INTO is_favorite (contact_code) VALUES (?) RETURNING contact_code`;
         try {
@@ -443,7 +457,7 @@ export class DBHelper {
             throw error;
         }
     }
- 
+
     private async getIsFavorite(contact_code: string): Promise<boolean> {
         const query = `SELECT * FROM is_favorite WHERE contact_code = ?`;
         try {
@@ -454,7 +468,7 @@ export class DBHelper {
             throw error;
         }
     }
- 
+
     private async deleteIsFavorite(contact_code: string): Promise<number> {
         const query = `DELETE FROM is_favorite WHERE contact_code = ?`;
         try {
@@ -465,11 +479,11 @@ export class DBHelper {
             throw error;
         }
     }
- 
+
     // -------------------------------------------------------------------------
     // PRIVATE: social_fields table
     // -------------------------------------------------------------------------
- 
+
     private async createSocialFields(contact_code: string, label: string, service: string, link: string): Promise<SocialObj> {
         const query = `INSERT INTO social_fields (contact_code, label, service, link) VALUES (?,?,?,?) RETURNING contact_code`;
         try {
@@ -481,7 +495,7 @@ export class DBHelper {
             throw error;
         }
     }
- 
+
     private async getSingleSocialField(contactCode: string, socialField: string): Promise<SocialObj> {
         const query = `SELECT * FROM social_fields WHERE contact_code = ? AND label = ?`;
         try {
@@ -492,7 +506,7 @@ export class DBHelper {
             throw error;
         }
     }
- 
+
     private async getSocialFields(contact_code: string): Promise<Array<SocialObj>> {
         const query = `SELECT * FROM social_fields WHERE contact_code = ?`;
         try {
@@ -504,7 +518,7 @@ export class DBHelper {
             throw error;
         }
     }
- 
+
     private async updateSocialField(contact_code: string, oldLabel: string, newLabel: string, link: string): Promise<number> {
         const query = `UPDATE social_fields SET label = ?, link = ? WHERE contact_code = ? AND label = ?`;
         try {
@@ -516,7 +530,7 @@ export class DBHelper {
             throw error;
         }
     }
- 
+
     private async deleteSocialField(contact_code: string, label: string): Promise<number> {
         const query = `DELETE FROM social_fields WHERE contact_code = ? AND label = ?`;
         try {
@@ -527,8 +541,8 @@ export class DBHelper {
             throw error;
         }
     }
- 
+
 
 }
- 
+
 export default new DBHelper();

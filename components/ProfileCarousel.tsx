@@ -1,6 +1,6 @@
 import DBHelper from "@/database/DBHelper";
 import * as Contacts from "expo-contacts";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Animated, Dimensions, StyleSheet, View } from "react-native";
 import Avatar from "./Avatar";
 
@@ -12,42 +12,46 @@ const FULL_ITEM_SIZE = ITEM_SIZE + SPACING * 2;
 
 const SIDE_SPACING = (width - ITEM_SIZE) / 2;
 
-export default function ProfileCarousel({  contact, onProfileFocus }: {  contact: Contacts.ExistingContact; onProfileFocus?: (profile: Contacts.ExistingContact, index: number) => void }) {
+export default function ProfileCarousel({ contact, onProfileFocus }: { contact: Contacts.ExistingContact; onProfileFocus?: (profile: Contacts.ExistingContact, index: number) => void }) {
   const scrollX = useRef(new Animated.Value(0)).current;
 
   // Track previously focused index to prevent duplicate calls
   const currentIndex = useRef(0);
 
   ///// THIS IS GARBAGE MOCK DATA REPLACE WITH REAL PROFILES AS SOON AS THEY ARE IMPLEMENTED /////
-  
-  const profileList = DBHelper.getAllProfileObjs(contact.id);
-  const profileContacts: Contacts.ExistingContact[] = [];
+
+  const [profileContacts, setProfileContacts] = useState<Contacts.ExistingContact[]>([]);
 
   useEffect(() => {
-    profileList.then(profileList => {profileList.forEach(profile => {
-      if (profile.contact !== undefined){
-        if (profile.contact.image === undefined){
-          profile.contact.image = {uri: profile.picture_link}
-        }
-        else
-        {
-          profile.contact.image.uri = profile.picture_link;
-        }
-          
-        
-        profileContacts.push(profile.contact);
-      }
-    })
-  });
-  }, [profileList])
+    if (DBHelper.getDBStatus()) {
+      const profileList = DBHelper.getAllProfileObjs(contact.id);
+      profileList.then(profileList => {
+        const profiles: Contacts.ExistingContact[] = [];
+        profileList.forEach(profile => {
+          if (profile.contact !== undefined) {
+            if (profile.contact.image === undefined) {
+              profile.contact.image = { uri: profile.picture_link }
+            }
+            else {
+              profile.contact.image.uri = profile.picture_link;
+            }
+            profiles.push(profile.contact);
+          }
+        });
+        setProfileContacts(profiles);
+      });
+    } else {
+      console.log("DB not ready");
+    }
+  }, [contact])
 
 
   // for (ids in listID){getProfileObj(contactID,profileID).push profiles}
   //const profileContacts = [contact, contact, contact, contact];
   ////////////////////////////////////////////////////////////////////////////////////////////////
 
-///// Empty function that is called when a profile changes /////
-///// provides the data of the selectd pofile              /////
+  ///// Empty function that is called when a profile changes /////
+  ///// provides the data of the selectd pofile              /////
   const _onProfileFocus = (
     profile: Contacts.ExistingContact,
     index: number
@@ -56,7 +60,7 @@ export default function ProfileCarousel({  contact, onProfileFocus }: {  contact
     console.log("Focused profile:", profile.name, "at index:", index);
     // TODO: Add logic here
   };
-/////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////
 
   // Listen to scrollX changes for live focus detection
   useEffect(() => {
