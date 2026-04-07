@@ -16,7 +16,7 @@ export default function Addresses({ addresses }: { addresses?: Contacts.Address[
                             </View>
 
                             <View style={styles.addressDetails}>
-                                <Text key={address.id} style={styles.addressBox}>{address.street}</Text>
+                                <Text key={address.id} style={styles.addressBox}>{address.formattedAddress}</Text>
                                 <Text style={styles.addressType}>{address.label}</Text>
                             </View>
 
