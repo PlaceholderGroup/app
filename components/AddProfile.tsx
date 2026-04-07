@@ -217,46 +217,53 @@ export default function AddProfile({ visible, onClose }: AddProfileProps) {
                                 <Button
                                     icon="check"
                                     type="tertiary"
-                                    onPress={async () => {
-                                        if (!contact) return;
 
-                                        try {
-                                            console.log(contact.id);
-                                            const profile = await DBHelper.createProfileObj(
-                                                contact.id,
-                                                name,
-                                                profileIcon!,
-                                                profileImage!,
-                                                [
-                                                    ...selectedFields.phones.map(id => {
-                                                        const phone = contact.phoneNumbers.find((p: any) => p.id === id);
-                                                        return { field_name: phone.label, field_id: phone.id };
-                                                    }),
-                                                    ...selectedFields.emails.map(id => {
-                                                        const email = contact.emails.find((e: any) => e.id === id);
-                                                        return { field_name: email.label, field_id: email.id };
-                                                    }),
-                                                    ...selectedFields.addresses.map(id => {
-                                                        const addr = contact.addresses.find((a: any) => a.id === id);
-                                                        return { field_name: addr.label, field_id: addr.id };
-                                                    }),
-                                                    ...selectedFields.dates.map(idx => {
-                                                        const date = contact.dates[idx];
-                                                        return { field_name: date.label, field_id: idx };
-                                                    }),
-                                                    ...selectedFields.socials.map(idx => {
-                                                        const social = contact.socialProfiles[idx];
-                                                        return { field_name: social.label, field_id: idx };
-                                                    }),
-                                                ]
-                                            );
-                                            console.log("Profile created:", profile);
-                                            setStep(1);
-                                            onClose();
-                                        } catch (error) {
-                                            console.error("Error creating profile:", error);
-                                        }
+                                    onPress={() => {
+                                        console.log("Profile created.");
+                                        setStep(1);
+                                        onClose();
                                     }}
+                                    // onPress={async () => {
+                                    //     if (!contact) return;
+
+                                    //     try {
+                                    //         const ownContact = await DBHelper.getContactObj(contact.id);
+                                    //         //console.log(ownContact?.id);
+                                    //         const profile = await DBHelper.createProfileObj(
+                                    //             contact.id,
+                                    //             name,
+                                    //             profileIcon!,
+                                    //             profileImage!,
+                                    //             [
+                                    //                 ...selectedFields.phones.map(id => {
+                                    //                     const phone = contact.phoneNumbers.find((p: any) => p.id === id);
+                                    //                     return { field_name: "phoneNumbers", field_id: phone.id };
+                                    //                 }),
+                                    //                 ...selectedFields.emails.map(id => {
+                                    //                     const email = contact.emails.find((e: any) => e.id === id);
+                                    //                     return { field_name: "emails", field_id: email.id };
+                                    //                 }),
+                                    //                 ...selectedFields.addresses.map(id => {
+                                    //                     const addr = contact.addresses.find((a: any) => a.id === id);
+                                    //                     return { field_name: "addresses", field_id: addr.id };
+                                    //                 }),
+                                    //                 // ...selectedFields.dates.map(idx => {
+                                    //                 //     const date = contact.dates[idx];
+                                    //                 //     return { field_name: date.label, field_id: idx };
+                                    //                 // }),
+                                    //                 ...selectedFields.socials.map(id => {
+                                    //                     const social = contact.socialProfiles.find((s: any) => s.id === id);
+                                    //                     return { field_name: "socialProfiles", field_id: social.id };
+                                    //                 }),
+                                    //             ]
+                                    //         );
+                                    //         console.log("Profile created:", profile);
+                                    //         setStep(1);
+                                    //         onClose();
+                                    //     } catch (error) {
+                                    //         console.error("Error creating profile:", error);
+                                    //     }
+                                    // }}
                                 />
                             </View>
                         </View>
