@@ -2,6 +2,8 @@ import DBHelper from "@/database/DBHelper";
 import * as Contacts from "expo-contacts";
 import { retryUntilTrue } from "./hacks";
 
+const SHOULD_FILTER = true;
+
 export const CONTACT_FIELDS = [
     Contacts.Fields.RawImage,
     Contacts.Fields.PhoneNumbers,
@@ -12,19 +14,18 @@ export const CONTACT_FIELDS = [
     Contacts.Fields.Dates
 ];
 
-// const FILTER = [
-//     "Business Bearcat",
-//     "Dr. Bearcut",
-//     "Ballet Bearcat",
-//     "Chef Bearcat",
-//     "Standard Bearcat",
-//     "Graduation Bearcat",
-//     "Anne Ning",
-//     "Jack Detrick",
-//     "Jonah Carter",
-//     "Kevin Long",
-//     "Mom",
-// ]
+const FILTER = [
+    "Business Bearcat",
+    "Dr. Bearcut",
+    "Ballet Bearcat",
+    "Chef Bearcat",
+    "Standard Bearcat",
+    "Graduation Bearcat",
+    "Anne Ning",
+    "Jack Detrick",
+    "Jonah Carter",
+    "Kevin Long",
+]
 
 export async function syncContacts() {
     const contacts = await getContacts() || [];
@@ -140,10 +141,13 @@ export async function getContacts(
 ): Promise<void | Contacts.ExistingContact[] | undefined> {
     const { status } = await Contacts.requestPermissionsAsync();
     if (status === 'granted') {
-        const { data } = await Contacts.getContactsAsync({
+        let { data } = await Contacts.getContactsAsync({
             sort: Contacts.SortTypes.FirstName,
             fields: CONTACT_FIELDS
         });
+        if (SHOULD_FILTER) {
+            data = data.filter((contact) => FILTER.includes(contact.name));
+        }
         setContacts?.(data);
         return data;
     }

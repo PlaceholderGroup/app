@@ -2,35 +2,28 @@ import "tsx";
 
 export default () => ({
   "expo": {
-    "name": "my-app",
-    "slug": "my-app",
+    "name": "Candle",
+    "slug": "candle",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "candle",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#2A0545",
+        "foregroundImage": "./assets/images/android-foreground.png",
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.READ_CONTACTS",
         "android.permission.WRITE_CONTACTS",
         "android.permission.NFC",
-        "android.permission.BLUETOOTH",
-        "android.permission.BLUETOOTH_ADVERTISE",
-        "android.permission.BLUETOOTH_CONNECT",
-        "android.permission.BLUETOOTH_SCAN",
-        "android.permission.BLUETOOTH_ADMIN",
       ],
-      "package": "com.anonymous.myapp"
+      "package": "com.placeholder.group.candle"
     },
     "web": {
       "output": "static",
@@ -47,12 +40,12 @@ export default () => ({
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#2A0545",
           "dark": {
-            "backgroundColor": "#000000"
+            "backgroundColor": "#2A0545"
           }
         }
       ],
@@ -71,7 +64,6 @@ export default () => ({
       ],
       "expo-sqlite",
       "expo-font",
-      "react-native-ble-plx",
       "./plugins/withHCEConfiguration.ts"
     ],
     "experiments": {
