@@ -4,6 +4,23 @@ import { StyleSheet, Text, View } from "react-native";
 
 
 export default function SocialProfiles({ socialProfiles }: { socialProfiles?: Contacts.SocialProfile[] }) {
+
+    const getIconName = (service?: string) => {
+        if (!service) return "sms";
+        const normalized = service.toLowerCase();
+        if (normalized.includes("discord")) return "discord";
+        if (normalized.includes("duo") && !normalized.includes("duolingo")) return "duo";
+        if (normalized.includes("paypal")) return "paypal";
+        if (normalized.includes("youtube")) return "play-circle";
+        if (normalized.includes("quora")) return "quora";
+        if (normalized.includes("reddit")) return "reddit";
+        if (normalized.includes("tiktok")) return "tiktok";
+        if (normalized.includes("steam")) return "videogame-asset";
+        if (normalized.includes("wechat")) return "wechat";
+        if (normalized.includes("wordpress")) return "wordpress";
+        return "sms";
+    };
+
     return (
         <View style={styles.container}>
             <Text style={styles.label}>Social Profile</Text>
@@ -12,7 +29,7 @@ export default function SocialProfiles({ socialProfiles }: { socialProfiles?: Co
                     socialProfiles?.map((socialProfile) => (
                         <View key={socialProfile.id} style={styles.socialProfileItem}>
                             <View style={styles.socialProfileIcon}>
-                                <MaterialIcons name="sms" size={24}/>
+                                <MaterialIcons name={getIconName(socialProfile.service)} size={24} />
                             </View>
 
                             <View style={styles.socialProfileDetails}>
