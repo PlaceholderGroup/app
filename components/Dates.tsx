@@ -1,9 +1,7 @@
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as Contacts from "expo-contacts";
 import { StyleSheet, Text, View } from "react-native";
 
-import BirthdayIcon from "./ContactDetailIcons/BirthdayIcon";
-import DateIcon from "./ContactDetailIcons/DateIcon";
-import ThreeDotsIcon from "./ContactDetailIcons/ThreeDotsIcon";
 
 function formatDate(date: Contacts.Date) {
   if (!date) return "";
@@ -28,7 +26,7 @@ export default function Dates({ birthday, dates }: { birthday?: Contacts.Date, d
                 {birthday && (
                     <View key={birthday.id} style={styles.dateItem}>
                         <View style={styles.dateIcon}>
-                            <BirthdayIcon/>
+                            <MaterialIcons name="cake" size={24}/>
                         </View>
 
                         <View style={styles.dateDetails}>
@@ -38,7 +36,7 @@ export default function Dates({ birthday, dates }: { birthday?: Contacts.Date, d
 
                         <View style={styles.dateLabels}>
                             <View style={styles.dateProfileLogos} />
-                            <ThreeDotsIcon />
+                            <MaterialIcons name="more-vert" size={24}/>
                         </View>
                     </View>
                 )}
@@ -47,7 +45,7 @@ export default function Dates({ birthday, dates }: { birthday?: Contacts.Date, d
                     // TODO: some error with duplicate key??
                     <View key={date.id+index.toString()} style={styles.dateItem}>
                         <View style={styles.dateIcon}>
-                            <DateIcon/>
+                            <MaterialIcons name="calendar-month" size={24}/>
                         </View>
 
                         <View style={styles.dateDetails}>
@@ -56,10 +54,8 @@ export default function Dates({ birthday, dates }: { birthday?: Contacts.Date, d
                         </View>
 
                         <View style={styles.dateLabels}>
-                            <View style={styles.dateProfileLogos}>
-                                {/* TODO: profile icons this date is linked to */}
-                            </View>
-                            <ThreeDotsIcon/>
+                            <View style={styles.dateProfileLogos} />
+                            <MaterialIcons name="more-vert" size={24}/>
                         </View>
                     </View>
                 ))

@@ -1,8 +1,7 @@
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as Contacts from "expo-contacts";
 import { StyleSheet, Text, View } from "react-native";
 
-import PhoneIcon from "./ContactDetailIcons/PhoneIcon";
-import ThreeDotsIcon from "./ContactDetailIcons/ThreeDotsIcon";
 
 export default function PhoneNumbers({ phoneNumbers }: { phoneNumbers?: Contacts.PhoneNumber[] }) {
     return (
@@ -13,7 +12,7 @@ export default function PhoneNumbers({ phoneNumbers }: { phoneNumbers?: Contacts
                     phoneNumbers?.map((phoneNumber) => (
                         <View key={phoneNumber.id} style={styles.phoneItem}>
                             <View style={styles.phoneIcon}>
-                                <PhoneIcon/>
+                                <MaterialIcons name="phone" size={24}/>
                             </View>
 
                             <View style={styles.phoneDetails}>
@@ -25,7 +24,7 @@ export default function PhoneNumbers({ phoneNumbers }: { phoneNumbers?: Contacts
                                 <View style={styles.phoneProfileLogos}>
                                     {/* TODO: profile icons this number is linked to */}
                                 </View>
-                                <ThreeDotsIcon/>
+                                <MaterialIcons name="more-vert" size={24}/>
                             </View>
                         </View>
                     ))

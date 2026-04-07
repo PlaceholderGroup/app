@@ -1,8 +1,7 @@
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as Contacts from "expo-contacts";
 import { StyleSheet, Text, View } from "react-native";
 
-import EmailIcon from "./ContactDetailIcons/EmailIcon";
-import ThreeDotsIcon from "./ContactDetailIcons/ThreeDotsIcon";
 
 export default function Emails({ emails }: { emails?: Contacts.Email[] }) {
     return (
@@ -13,7 +12,7 @@ export default function Emails({ emails }: { emails?: Contacts.Email[] }) {
                     emails?.map((email) => (
                         <View key={email.id} style={styles.emailItem}>
                             <View style={styles.emailIcon}>
-                                <EmailIcon/>
+                                <MaterialIcons name="email" size={24}/>
                             </View>
 
                             <View style={styles.emailDetails}>
@@ -25,7 +24,7 @@ export default function Emails({ emails }: { emails?: Contacts.Email[] }) {
                                 <View style={styles.emailProfileLogos}>
                                     {/* TODO: profile icons this email is linked to */}
                                 </View>
-                                <ThreeDotsIcon/>
+                                <MaterialIcons name="more-vert" size={24}/>
                             </View>
                         </View>
                     ))

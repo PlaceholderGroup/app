@@ -1,8 +1,7 @@
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as Contacts from "expo-contacts";
 import { StyleSheet, Text, View } from "react-native";
 
-import AddressIcon from "./ContactDetailIcons/AddressIcon";
-import ThreeDotsIcon from "./ContactDetailIcons/ThreeDotsIcon";
 
 export default function Addresses({ addresses }: { addresses?: Contacts.Address[] }) {
     return (
@@ -13,11 +12,11 @@ export default function Addresses({ addresses }: { addresses?: Contacts.Address[
                     addresses?.map((address) => (
                         <View key={address.id} style={styles.addressItem}>
                             <View style={styles.addressIcon}>
-                                <AddressIcon/>
+                                <MaterialIcons name="location-on" size={24}/>
                             </View>
 
                             <View style={styles.addressDetails}>
-                                <Text key={address.id} style={styles.addressBox}>{address.street}</Text>
+                                <Text key={address.id} style={styles.addressBox}>{address.formattedAddress}</Text>
                                 <Text style={styles.addressType}>{address.label}</Text>
                             </View>
 
@@ -25,7 +24,7 @@ export default function Addresses({ addresses }: { addresses?: Contacts.Address[
                                 <View style={styles.addressProfileLogos}>
                                     {/* TODO: profile icons this address is linked to */}
                                 </View>
-                                <ThreeDotsIcon/>
+                                <MaterialIcons name="more-vert" size={24}/>
                             </View>
                         </View>
                     ))

@@ -1,8 +1,9 @@
+import AddProfile from "@/components/AddProfile";
 import Button from "@/components/Button";
 import SearchBar from "@/components/SearchBar";
 import { ContactsContext } from "@/contexts/ContactsContext";
 import { editContact } from "@/utils/contacts";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -16,6 +17,7 @@ type NavbarProps = {
 
 export default function Navbar({ canGoBack, onBack, showSearch, searchQuery, setSearchQuery }: NavbarProps) {
     const { currentContact } = useContext(ContactsContext);
+    const [showAddProfile, setShowAddProfile] = useState(false);
 
     return (
         <SafeAreaView edges={["top", "left", "right"]} style={[
@@ -32,6 +34,11 @@ export default function Navbar({ canGoBack, onBack, showSearch, searchQuery, set
             ) : (
                 <View style={styles.spacer} />
             )}
+            {currentContact !== undefined && (
+                <Button icon="add" type="tertiary" onPress={() => setShowAddProfile(true)} />
+            )}
+            <AddProfile visible={showAddProfile} onClose={() => setShowAddProfile(false)} />
+                
             {currentContact !== undefined && (
                 <Button icon="edit" type="tertiary" onPress={() => {
                     editContact(currentContact);
