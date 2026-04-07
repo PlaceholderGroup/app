@@ -1,10 +1,10 @@
 import Avatar from "@/components/Avatar";
-import QuickShareDevices from "@/components/QuickShareDevices";
 import TabsSafeAreaView from "@/components/TabsSafeAreaView";
-import { getContact, toVCard } from "@/utils/contacts";
+import DBHelper, { profileObj } from "@/database/DBHelper";
+import { toVCard } from "@/utils/contacts";
+import { retryUntilTrue } from "@/utils/hacks";
 import NFC from "@/utils/NFC";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import * as Contacts from "expo-contacts";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -12,54 +12,56 @@ import QRCode from "react-qr-code";
 
 
 export default function Sharing() {
-    const { id } = useLocalSearchParams<{ id: string }>();
-    const [contact, setContact] = useState<Contacts.ExistingContact>();
+    const { id, profileId } = useLocalSearchParams<{ id: string, profileId: string }>();
+    const [profile, setProfile] = useState<profileObj>();
 
-    // TODO: Eventually this will reference a profile instead of an entire contact
+
     useEffect(() => {
-        getContact(id, setContact);
-    }, [id]);
+        (async () => {
+            await retryUntilTrue(() => DBHelper.getDBStatus());
+            const profile = await DBHelper.getProfileObj(id, Number(profileId));
+            if (profile) {
+                if (profile.name !== "Stock" && profile.picture_link !== "") {
+                    profile.contact.image = { uri: profile.picture_link };
+                }
+                setProfile(profile);
+            }
+        })();
+    }, [id, profileId]);
 
     useEffect(() => {
         if (Platform.OS === "android") {
-            if (contact) {
-                NFC.startSharing(contact);
+            if (profile) {
+                NFC.startSharing(profile.contact);
             }
         }
 
         return () => {
             if (Platform.OS === "android") NFC.stopSharing();
         }
-    }, [contact]);
+    }, [profile]);
 
     return (
         // TODO: I don't like listing this manually here. That's what creating the TabsSafeAreaView component was supposed to avoid
         <TabsSafeAreaView edges={["bottom", "left", "right"]}>
             <ScrollView contentContainerStyle={styles.scrollView}>
                 <View style={styles.sharingContainer}>
-                    {contact &&
+                    {profile?.contact &&
                         <View style={styles.contactPreview}>
-                            <Avatar name={contact.name} size={64} source={contact.image?.uri} />
+                            <Avatar name={profile.contact.name} size={64} source={profile.contact.image?.uri} icon={profile.icon as keyof typeof MaterialIcons.glyphMap} />
                             <Text style={styles.previewText}>
-                                Sharing <Text style={styles.namePreview}>{contact.name}</Text>
+                                Sharing <Text style={styles.namePreview}>{profile.contact.name}</Text>
                             </Text>
                         </View>
                     }
                     <View style={styles.qrContainer}>
-                        {contact && <QRCode value={toVCard(contact)} size={220} style={styles.qrContainer} />}
+                        {profile && <QRCode value={toVCard(profile.contact)} size={220} style={styles.qrContainer} />}
                     </View>
                     <View style={styles.sharePrompt}>
                         {Platform.OS === "android" && <MaterialIcons name="contactless" size={24} />}
                         <Text style={styles.previewText}>{Platform.select({ ios: "Scan", android: "Tap or scan" })} to receive</Text>
                     </View>
 
-                </View>
-                <View style={styles.quickShare}>
-                    <View style={styles.quickShareText}>
-                        <Text style={styles.quickShareLabel}>Quick Share</Text>
-                        <Text style={styles.quickSharePrompt}>Select someone from below to share with.</Text>
-                    </View>
-                    <QuickShareDevices />
                 </View>
             </ScrollView>
         </TabsSafeAreaView>
@@ -79,6 +81,9 @@ const styles = StyleSheet.create({
         alignItems: "center",
         gap: 20,
         alignSelf: "stretch",
+        flexGrow: 1,
+        flexShrink: 0,
+        flexBasis: 0,
     },
     contactPreview: {
         display: "flex",

@@ -8,17 +8,40 @@ import Button from "@/components/Button";
 import ProfileCarousel from "@/components/ProfileCarousel";
 import TabsSafeAreaView from "@/components/TabsSafeAreaView";
 import { ContactsContext } from "@/contexts/ContactsContext";
+import DBHelper, { profileObj } from "@/database/DBHelper";
 import { deduplicate } from "@/utils/contacts";
+import { retryUntilTrue } from "@/utils/hacks";
 import { openLink } from "@/utils/link";
 import * as Contacts from "expo-contacts";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useContext, useEffect } from "react";
-
+import { useCallback, useContext, useEffect, useState } from "react";
 
 export default function ContactScreen({ contact }: { contact: Contacts.ExistingContact }) {
     const router = useRouter();
 
     const { setCurrentContact } = useContext(ContactsContext);
+
+    const [profiles, setProfiles] = useState<profileObj[]>([]);
+    const [profileIndex, setProfileIndex] = useState<number>(0);
+
+    useEffect(() => {
+        (async () => {
+            await retryUntilTrue(() => DBHelper.getDBStatus());
+            const profileList = await DBHelper.getAllProfileObjs(contact.id);
+            profileList.forEach(profile => {
+                if (profile.contact !== undefined) {
+                    profile.contact = deduplicate(profile.contact);
+                    if (profile.contact.image === undefined) {
+                        profile.contact.image = { uri: profile.picture_link }
+                    }
+                    else {
+                        profile.contact.image.uri = profile.picture_link;
+                    }
+                }
+            });
+            setProfiles(profileList);
+        })();
+    }, [contact])
 
     useFocusEffect(
         useCallback(() => {
@@ -27,35 +50,29 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
         }, [contact.id])
     );
 
-    useEffect(() => {
-        if (contact) {
-            deduplicate(contact);
-        }
-    }, [contact])
-
     return (
         <TabsSafeAreaView style={{ flex: 1 }} >
             <ScrollView showsVerticalScrollIndicator={false} bounces={true}>
                 <View style={styles.head}>
                     {
-                        (contact) &&
+                        (profiles[profileIndex]?.contact) &&
                         <>
-                            <ProfileCarousel contact={contact} />
-                            <Text style={styles.name}>{contact.name}</Text>
+                            <ProfileCarousel profiles={profiles} setProfileIndex={setProfileIndex} />
+                            <Text style={styles.name}>{profiles[profileIndex]?.contact.name}</Text>
 
                             {/* TODO: These need to be based on the primary phone/email, not just the first one. */}
                             <View style={styles.buttons}>
-                                <Button icon="phone" disabled={!contact.phoneNumbers} onPress={() => {
-                                    contact.phoneNumbers?.[0]?.number && openLink(contact.phoneNumbers?.[0]?.number, "tel");
+                                <Button icon="phone" disabled={!profiles[profileIndex]?.contact.phoneNumbers} onPress={() => {
+                                    profiles[profileIndex]?.contact.phoneNumbers?.[0]?.number && openLink(profiles[profileIndex]?.contact.phoneNumbers?.[0]?.number, "tel");
                                 }} />
-                                <Button icon="chat-bubble" disabled={!contact.phoneNumbers} onPress={() => {
-                                    contact.phoneNumbers?.[0]?.number && openLink(contact.phoneNumbers?.[0]?.number, "sms");
+                                <Button icon="chat-bubble" disabled={!profiles[profileIndex]?.contact.phoneNumbers} onPress={() => {
+                                    profiles[profileIndex]?.contact.phoneNumbers?.[0]?.number && openLink(profiles[profileIndex]?.contact.phoneNumbers?.[0]?.number, "sms");
                                 }} />
-                                <Button icon="videocam" disabled={!contact.phoneNumbers} onPress={() => {
-                                    contact.phoneNumbers?.[0]?.number && openLink(contact.phoneNumbers?.[0]?.number, "video");
+                                <Button icon="videocam" disabled={!profiles[profileIndex]?.contact.phoneNumbers} onPress={() => {
+                                    profiles[profileIndex]?.contact.phoneNumbers?.[0]?.number && openLink(profiles[profileIndex]?.contact.phoneNumbers?.[0]?.number, "video");
                                 }} />
-                                <Button icon="email" disabled={!contact.emails} onPress={() => {
-                                    contact.emails?.[0]?.email && openLink(contact.emails?.[0]?.email, "email");
+                                <Button icon="email" disabled={!profiles[profileIndex]?.contact.emails} onPress={() => {
+                                    profiles[profileIndex]?.contact.emails?.[0]?.email && openLink(profiles[profileIndex]?.contact.emails?.[0]?.email, "email");
                                 }} />
                             </View>
                             <Button title="Share Contact" icon="share" type="tertiary" style={styles.shareButton} onPress={() => {
@@ -63,6 +80,7 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
                                     pathname: "/share/[id]",
                                     params: {
                                         id: contact.id,
+                                        profileId: profiles[profileIndex]?.profile_id,
                                     }
                                 })
                             }} />
@@ -71,20 +89,20 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
                 </View>
                 <View style={styles.main}>
                     {
-                        (contact?.phoneNumbers) &&
-                        <PhoneNumbers phoneNumbers={contact.phoneNumbers} />
+                        (profiles[profileIndex]?.contact?.phoneNumbers) &&
+                        <PhoneNumbers phoneNumbers={profiles[profileIndex]?.contact.phoneNumbers} />
                     }
                     {
-                        (contact?.emails) &&
-                        <Emails emails={contact.emails} />
+                        (profiles[profileIndex]?.contact?.emails) &&
+                        <Emails emails={profiles[profileIndex]?.contact.emails} />
                     }
                     {
-                        (contact?.birthday || contact?.dates) &&
-                        <Dates birthday={contact.birthday} dates={contact.dates} />
+                        (profiles[profileIndex]?.contact?.birthday || profiles[profileIndex]?.contact?.dates) &&
+                        <Dates birthday={profiles[profileIndex]?.contact.birthday} dates={profiles[profileIndex]?.contact.dates} />
                     }
                     {
-                        (contact?.addresses) &&
-                        <Addresses addresses={contact.addresses} />
+                        (profiles[profileIndex]?.contact?.addresses) &&
+                        <Addresses addresses={profiles[profileIndex]?.contact.addresses} />
                     }
                 </View>
             </ScrollView>
@@ -131,6 +149,5 @@ const styles = StyleSheet.create({
     shareButton: {
         alignSelf: "stretch",
         paddingBottom: 0,
-        // backgroundColor: "#000", // For testing
     },
 });

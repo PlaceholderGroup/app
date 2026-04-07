@@ -17,7 +17,7 @@ async function startSharing(contact: Contacts.ExistingContact) {
         });
 
         session = await HCESession.getInstance();
-        session.setApplication(tag);
+        await session.setApplication(tag);
         await session.setEnabled(true);
     }
 }
