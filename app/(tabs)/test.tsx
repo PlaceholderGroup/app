@@ -3,6 +3,7 @@ import Button from "@/components/Button";
 import TabsSafeAreaView from "@/components/TabsSafeAreaView";
 import DBHelper from "@/database/DBHelper";
 import { getContact } from "@/utils/contacts";
+import { reloadAppAsync } from "expo";
 import * as SecureStore from "expo-secure-store";
 import { StyleSheet, View } from "react-native";
 
@@ -34,11 +35,17 @@ export default function TestScreen() {
         }
     }
 
+    async function resetUserId() {
+        await SecureStore.deleteItemAsync("userId");
+    }
+
     return (
         <TabsSafeAreaView>
             <View style={styles.body}>
                 <Button title="Create profile" icon="add" onPress={createProfile} />
                 <Button title="Delete profiles" icon="delete" onPress={deleteProfiles} />
+                <Button title="Reset user ID" icon="refresh" onPress={resetUserId} />
+                <Button title="Reload app" icon="refresh" onPress={() => reloadAppAsync()} />
             </View>
         </TabsSafeAreaView>
     )
