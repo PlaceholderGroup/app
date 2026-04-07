@@ -221,6 +221,7 @@ export default function AddProfile({ visible, onClose }: AddProfileProps) {
                                         if (!contact) return;
 
                                         try {
+                                            console.log(contact.id);
                                             const profile = await DBHelper.createProfileObj(
                                                 contact.id,
                                                 name,
