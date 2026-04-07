@@ -1,8 +1,10 @@
 import Button from "@/components/Button";
+import DBHelper from "@/database/DBHelper";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as ImagePicker from "expo-image-picker";
-import { useState } from "react";
-import { Image, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import * as SecureStore from "expo-secure-store";
+import { useEffect, useState } from "react";
+import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 type AddProfileProps = {
     visible: boolean;
@@ -31,6 +33,20 @@ export default function AddProfile({ visible, onClose }: AddProfileProps) {
         "cake",
         "rocket-launch",
     ] as const;
+    const [contact, setContact] = useState<any>(null);
+    const [selectedFields, setSelectedFields] = useState<{
+        phones: any[];
+        emails: any[];
+        addresses: any[];
+        dates: any[];
+        socials: any[];
+    }>({
+        phones: [],
+        emails: [],
+        addresses: [],
+        dates: [],
+        socials: [],
+    });
 
     const pickProfileImage = async () => {
         const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -46,6 +62,43 @@ export default function AddProfile({ visible, onClose }: AddProfileProps) {
             setProfileImage(result.assets[0].uri);
         }
     };
+
+    function toggleSelection(type: keyof typeof selectedFields, id: any) {
+        setSelectedFields(prev => {
+            const exists = prev[type].includes(id);
+            return {
+                ...prev,
+                [type]: exists
+                    ? prev[type].filter(i => i !== id)
+                    : [...prev[type], id],
+            };
+        });
+    }
+
+    async function getUserContact() {
+        const id = await SecureStore.getItemAsync("userId");
+        if (!id) return null;
+        return await DBHelper.getContactObj(id);
+    }
+
+    useEffect(() => {
+        if (step === 2) {
+            (async () => {
+                const data = await getUserContact();
+                setContact(data);
+            })();
+        }
+    }, [step]);
+
+    const CheckboxRow = ({ text, label, checked, onPress }: any) => (
+        <Pressable onPress={onPress} style={{ flexDirection: "row", alignItems: "center", marginVertical: 3 }}>
+            <MaterialIcons name={checked ? "check-box" : "check-box-outline-blank"} size={30} color={checked ? "purple" : "#555"} />
+            <View style={{ flexDirection: "column", alignItems: "flex-start", marginVertical: 3, flex: 1 }}>
+                <Text style={{ flexShrink: 1, paddingLeft: 10 }}>{text}</Text>
+                <Text style={{ flexShrink: 1, paddingLeft: 10, color: "#555" }}>{label}</Text>
+            </View>
+        </Pressable>
+    );
 
     return (
         <Modal
@@ -92,27 +145,120 @@ export default function AddProfile({ visible, onClose }: AddProfileProps) {
                         {/* next- to p2 */}
                         <View style={styles.footer}>
                             <View style={{ flex: 1 }} />
-                            <Button style={styles.footerButton} icon="arrow-forward" type="tertiary" onPress={() => setStep(2)} disabled={!name || !profileIcon} />
+                            <Button style={styles.footerButton} icon="arrow-forward" type="tertiary" onPress={() => setStep(2)} disabled={!name || !profileIcon || !profileImage} />
                         </View>
                     </View>
                     )}
 
                     {/* P2 */}
-                    {step === 2 && ( <View>
+                    {step === 2 && contact && (
+                        <View style={{ maxHeight: "91%" }}>
+                            <ScrollView showsVerticalScrollIndicator={false} bounces={true} style={{ flexGrow: 1 }}>
 
-                        <Text style={styles.label}>tralalalala</Text>
+                                {/* numbers */}
+                                {contact.phoneNumbers?.length > 0 && (
+                                    <>
+                                        <Text style={styles.label}>Phone Numbers</Text>
+                                        {contact.phoneNumbers.map((p: any) => (
+                                            <CheckboxRow key={p.id} label={`${p.label}`} text={`${p.number}`}
+                                                checked={selectedFields.phones.includes(p.id)} onPress={() => toggleSelection("phones", p.id)} />
+                                        ))}
+                                    </>
+                                )}
 
-                        {/* back / submit buttons */}
-                        <View style={styles.footer}>
-                            <Button style={styles.footerButton} icon="arrow-back" type="tertiary" onPress={() => setStep(1)} />
-                            <View style={{ flex: 1 }} />
-                            <Button style={styles.footerButton} icon="check" type="tertiary"
-                                onPress={() => {
-                                    // TODO: submit profile stuff idk lol
-                                }}
-                            />
+                                {/* email */}
+                                {contact.emails?.length > 0 && (
+                                    <>
+                                        <Text style={styles.label}>Emails</Text>
+                                        {contact.emails.map((e: any) => (
+                                            <CheckboxRow key={e.id} label={`${e.label}`} text={`${e.email}`}
+                                                checked={selectedFields.emails.includes(e.id)} onPress={() => toggleSelection("emails", e.id)} />
+                                        ))}
+                                    </>
+                                )}
+
+                                {/* addr */}
+                                {contact.addresses?.length > 0 && (
+                                    <>
+                                        <Text style={styles.label}>Addresses</Text>
+                                        {contact.addresses.map((a: any) => (
+                                            <CheckboxRow key={a.id} label={`${a.label}`} text={`${a.formattedAddress}`}
+                                                checked={selectedFields.addresses.includes(a.id)} onPress={() => toggleSelection("addresses", a.id)} />
+                                        ))}
+                                    </>
+                                )}
+
+                                {/* date */}
+                                {contact.dates?.length > 0 && (
+                                    <>
+                                        <Text style={styles.label}>Dates</Text>
+                                        {contact.dates.map((d: any, i: number) => (
+                                            <CheckboxRow key={i} label={`${d.label}`} text={`${d.month}/${d.day}/${d.year}`}
+                                                checked={selectedFields.dates.includes(i)} onPress={() => toggleSelection("dates", i)} />
+                                        ))}
+                                    </>
+                                )}
+
+                                {/* social profs */}
+                                {contact.socialProfiles?.length > 0 && (
+                                    <>
+                                        <Text style={styles.label}>Social Profiles</Text>
+                                        {contact.socialProfiles.map((s: any, i: number) => (
+                                            <CheckboxRow key={i} label={`${s.label}`} text={`${s.username}`}
+                                                checked={selectedFields.socials.includes(i)} onPress={() => toggleSelection("socials", i)} />
+                                        ))}
+                                    </>
+                                )}
+                            </ScrollView>
+                            {/* bottom */}
+                            <View style={styles.footer}>
+                                <Button icon="arrow-back" type="tertiary" onPress={() => setStep(1)} />
+                                <View style={{ flex: 1 }} />
+                                <Button
+                                    icon="check"
+                                    type="tertiary"
+                                    onPress={async () => {
+                                        if (!contact) return;
+
+                                        try {
+                                            const profile = await DBHelper.createProfileObj(
+                                                contact.id,
+                                                name,
+                                                profileIcon!,
+                                                profileImage!,
+                                                [
+                                                    ...selectedFields.phones.map(id => {
+                                                        const phone = contact.phoneNumbers.find((p: any) => p.id === id);
+                                                        return { field_name: phone.label, field_id: phone.id };
+                                                    }),
+                                                    ...selectedFields.emails.map(id => {
+                                                        const email = contact.emails.find((e: any) => e.id === id);
+                                                        return { field_name: email.label, field_id: email.id };
+                                                    }),
+                                                    ...selectedFields.addresses.map(id => {
+                                                        const addr = contact.addresses.find((a: any) => a.id === id);
+                                                        return { field_name: addr.label, field_id: addr.id };
+                                                    }),
+                                                    ...selectedFields.dates.map(idx => {
+                                                        const date = contact.dates[idx];
+                                                        return { field_name: date.label, field_id: idx };
+                                                    }),
+                                                    ...selectedFields.socials.map(idx => {
+                                                        const social = contact.socialProfiles[idx];
+                                                        return { field_name: social.label, field_id: idx };
+                                                    }),
+                                                ]
+                                            );
+                                            console.log("Profile created:", profile);
+                                            setStep(1);
+                                            onClose();
+                                        } catch (error) {
+                                            console.error("Error creating profile:", error);
+                                        }
+                                    }}
+                                />
+                            </View>
                         </View>
-                    </View>
                     )}
 
                 </Pressable>
@@ -135,6 +281,8 @@ const styles = StyleSheet.create({
         padding: 10,
         paddingRight: 20,
         paddingLeft: 20,
+        maxHeight: "70%",
+        overflow: "hidden",
     },
     header: {
         flexDirection: "row",
@@ -150,6 +298,7 @@ const styles = StyleSheet.create({
         fontSize: 15,
         marginBottom: 5,
         marginTop: 10,
+        fontWeight: "bold",
     },
     input: {
         borderWidth: 1,
@@ -198,9 +347,12 @@ const styles = StyleSheet.create({
     footer: {
         flexDirection: "row",
         alignItems: "center",
-        marginTop: 20,
+        marginTop: 10,
     },
     footerButton: {
         padding: 0,
+    },
+    scrollContainer: {
+        maxHeight: "75%",
     },
 });
