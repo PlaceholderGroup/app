@@ -1,6 +1,6 @@
 export async function retryUntilTrue(
     callback: () => Promise<boolean> | boolean,
-    interval: number = 100
+    interval: number = 50
 ): Promise<boolean> {
     while (true) {
         const result = await callback();

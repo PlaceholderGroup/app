@@ -1,4 +1,5 @@
 import { profileObj } from "@/database/DBHelper";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as Contacts from "expo-contacts";
 import React, { useEffect, useRef } from "react";
 import { Animated, Dimensions, StyleSheet, View } from "react-native";
@@ -105,6 +106,7 @@ export default function ProfileCarousel({ profiles, onProfileFocus, setProfileIn
                 source={item.contact.image?.uri}
                 size={ITEM_SIZE}
                 name={item.contact.name}
+                icon={item.icon as keyof typeof MaterialIcons.glyphMap}
               />
             </Animated.View>
           );
@@ -116,7 +118,7 @@ export default function ProfileCarousel({ profiles, onProfileFocus, setProfileIn
 
 const styles = StyleSheet.create({
   carousel: {
-    height: ITEM_SIZE,
+    height: ITEM_SIZE + 12,
   },
 
   itemContainer: {

@@ -43,19 +43,6 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
         })();
     }, [contact])
 
-    //Create Mock Profiles
-
-    // useEffect(() => {
-    //     (async () => {
-    //         console.log("Hi there");
-    //         await retryUntilTrue(DBHelper.getDBStatus);
-    //         console.log("Hi");
-    //         await DBHelper.createProfileObj(contact.id, "Business", "work", contact.image?.uri || "", [{field_name: "phoneNumbers", field_id: "2916"}])
-    //         await DBHelper.createProfileObj(contact.id, "Social", "personal", contact.image?.uri || "", [{field_name: "phoneNumbers", field_id: "2929"}])
-    //         await DBHelper.createProfileObj(contact.id, "Culinary", "cooking", contact.image?.uri || "", [{field_name: "phoneNumbers", field_id: "2923"}])
-    //     })();
-    // }, [contact]);
-
     useFocusEffect(
         useCallback(() => {
             setCurrentContact(contact.id);
@@ -93,6 +80,7 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
                                     pathname: "/share/[id]",
                                     params: {
                                         id: contact.id,
+                                        profileId: profiles[profileIndex]?.profile_id,
                                     }
                                 })
                             }} />
@@ -161,6 +149,5 @@ const styles = StyleSheet.create({
     shareButton: {
         alignSelf: "stretch",
         paddingBottom: 0,
-        // backgroundColor: "#000", // For testing
     },
 });
