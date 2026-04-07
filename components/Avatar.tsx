@@ -1,3 +1,4 @@
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Image, ImageStyle } from "expo-image";
 import { DimensionValue, StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 
@@ -8,7 +9,7 @@ function getColor(name: string): "red" | "green" | "blue" {
     return colors[index];
 }
 
-export default function Avatar({ name, size, source, style, ...rest }: { name: string, size: DimensionValue, source?: string, style?: StyleProp<ViewStyle | ImageStyle> }) {
+export default function Avatar({ name, size, source, icon, style, ...rest }: { name: string, size: DimensionValue, source?: string, icon?: keyof typeof MaterialIcons.glyphMap, style?: StyleProp<ViewStyle | ImageStyle> }) {
     const circle = {
         width: size,
         height: size,
@@ -20,20 +21,27 @@ export default function Avatar({ name, size, source, style, ...rest }: { name: s
     }
     if (source) {
         return (
-            <Image
-                {...rest}
-                style={[styles.avatar, circle, style as StyleProp<ImageStyle>]}
-                source={source}
-            />
+            <View style={styles.container}>
+                <Image
+                    {...rest}
+                    style={[styles.avatar, circle, style as StyleProp<ImageStyle>]}
+                    source={source}
+                />
+                {icon && <MaterialIcons name={icon} size={16} style={styles.icon} />}
+            </View>
         );
     }
     return (
-        <View
-            {...rest}
-            style={[styles.avatar, styles[getColor(name)], circle, style as StyleProp<ViewStyle>]}
-        >
-            <Text style={[styles.initial, initial]}>{name.at(0)?.toUpperCase()}</Text>
+        <View style={styles.container}>
+            <View
+                {...rest}
+                style={[styles.avatar, styles[getColor(name)], circle, style as StyleProp<ViewStyle>]}
+            >
+                <Text style={[styles.initial, initial]}>{name.at(0)?.toUpperCase()}</Text>
+            </View>
+            {icon && <MaterialIcons name={icon} size={16} style={styles.icon} />}
         </View>
+
     );
 }
 
@@ -44,6 +52,25 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         overflow: "hidden"
+    },
+    container: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+    },
+    icon: {
+        display: "flex",
+        width: 24,
+        height: 24,
+        backgroundColor: "#FFFFFF",
+        justifyContent: "center",
+        alignItems: "center",
+        borderRadius: 12,
+        borderColor: "#CCCCCC",
+        borderWidth: 1,
+        textAlign: "center",
+        lineHeight: 22,
+        marginTop: -12,
     },
     red: {
         backgroundColor: "#FCC",
@@ -56,12 +83,5 @@ const styles = StyleSheet.create({
     },
     initial: {
         fontWeight: "600",
-    },
-    container: {
-        flexDirection: "row",
-        gap: 20,
-        alignItems: "center",
-        paddingHorizontal: 10,
-        paddingVertical: 5
     },
 })
