@@ -1,24 +1,109 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import Navbar from "@/components/Navbar";
+import { ContactsProvider } from "@/contexts/ContactsContext";
+import DBHelper from "@/database/DBHelper";
+import { getContacts, syncContacts } from "@/utils/contacts";
+import { Lexend_300Light, Lexend_400Regular, Lexend_500Medium, useFonts } from "@expo-google-fonts/lexend";
+import { DefaultTheme, ThemeProvider } from "@react-navigation/native";
+import * as Contacts from "expo-contacts";
+import { SplashScreen, Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useEffect, useRef, useState } from "react";
+import { AppState } from "react-native";
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
-export const unstable_settings = {
-  anchor: '(tabs)',
+type CustomHeaderOptions = {
+    showSearch?: boolean,
+    searchQuery?: string,
+    setSearchQuery?: (text: string) => void,
+}
+
+const Theme = {
+    ...DefaultTheme,
+    colors: {
+        ...DefaultTheme.colors,
+        background: "#F1EEE6",
+    },
 };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
 
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
+    const [contacts, setContacts] = useState<Array<Contacts.ExistingContact>>([]);
+    const [isDBReady, setIsDBReady] = useState<boolean>(false);
+
+    const appState = useRef(AppState.currentState);
+
+    const [loaded, error] = useFonts({
+        Lexend_300Light,
+        Lexend_400Regular,
+        Lexend_500Medium,
+    })
+
+    useEffect(() => {
+        if ((isDBReady && loaded) || error) {
+            SplashScreen.hideAsync();
+        }
+    }, [isDBReady, loaded, error]);
+
+    useEffect(() => {
+        (async () => {
+            try {
+                await DBHelper.initDB();
+                await syncContacts();
+                setIsDBReady(true);
+            } catch (error) {
+                console.error(error);
+            }
+        })();
+    }, []);
+
+    useEffect(() => {
+        getContacts(setContacts);
+    }, []);
+
+    // TODO: This won't work if we end up getting our own edit contact functionality, 
+    // but for now it's fine
+    // TODO: I also don't like that it is duplicated over 3 different files
+    useEffect(() => {
+        const subscription = AppState.addEventListener("change", (nextAppState) => {
+            if (
+                appState.current.match(/inactive|background/) &&
+                nextAppState === "active"
+            ) {
+                getContacts(setContacts);
+            }
+
+            appState.current = nextAppState;
+        });
+        return () => {
+            subscription.remove();
+        };
+    }, []);
+
+    return (
+        <ContactsProvider data={contacts}>
+            <StatusBar style="dark" />
+            <ThemeProvider value={Theme}>
+                <Stack screenOptions={{
+                    headerShown: true,
+                    header: ({ options, route, navigation }) => {
+                        // TODO: I don't love this, but it works well enough for now
+                        const customOptions = options as CustomHeaderOptions & typeof options;
+                        return (
+                            <Navbar
+                                onBack={navigation.goBack}
+                                canGoBack={navigation.canGoBack()}
+                                showSearch={customOptions.showSearch}
+                                searchQuery={customOptions.searchQuery}
+                                setSearchQuery={customOptions.setSearchQuery}
+                            />
+                        )
+                    },
+                    headerTransparent: true,
+                }}>
+                    <Stack.Screen name="(tabs)" />
+                    <Stack.Screen name="contact/[id]" />
+                </Stack>
+            </ThemeProvider>
+        </ContactsProvider>
+    )
 }
