@@ -15,7 +15,7 @@ import { retryUntilTrue } from "@/utils/hacks";
 import { openLink } from "@/utils/link";
 import * as Contacts from "expo-contacts";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 
 export default function ContactScreen({ contact }: { contact: Contacts.ExistingContact }) {
     const router = useRouter();
@@ -23,32 +23,31 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
     const { setCurrentContact } = useContext(ContactsContext);
     const { profiles, setProfiles } = useContext(ProfilesContext);
 
-    // const [profiles, setProfiles] = useState<profileObj[]>([]);
     const [profileIndex, setProfileIndex] = useState<number>(0);
-
-    useEffect(() => {
-        (async () => {
-            await retryUntilTrue(() => DBHelper.getDBStatus());
-            const profileList = await DBHelper.getAllProfileObjs(contact.id);
-            profileList.forEach(profile => {
-                if (profile.contact !== undefined) {
-                    profile.contact = deduplicate(profile.contact);
-                    if (profile.contact.image === undefined) {
-                        profile.contact.image = { uri: profile.picture_link }
-                    }
-                    else {
-                        profile.contact.image.uri = profile.picture_link;
-                    }
-                }
-            });
-            setProfiles(profileList);
-        })();
-    }, [contact]);
 
     useFocusEffect(
         useCallback(() => {
-            setCurrentContact(contact.id);
-            return () => setCurrentContact(undefined);
+            (async () => {
+                setCurrentContact(contact.id);
+                await retryUntilTrue(() => DBHelper.getDBStatus());
+                const profileList = await DBHelper.getAllProfileObjs(contact.id);
+                profileList.forEach(profile => {
+                    if (profile.contact !== undefined) {
+                        profile.contact = deduplicate(profile.contact);
+                        if (profile.contact.image === undefined) {
+                            profile.contact.image = { uri: profile.picture_link }
+                        }
+                        else {
+                            profile.contact.image.uri = profile.picture_link;
+                        }
+                    }
+                });
+                setProfiles(profileList);
+            })();
+            return () => {
+                setCurrentContact(undefined);
+                setProfiles([]);
+            };
         }, [contact.id])
     );
 
