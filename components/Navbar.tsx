@@ -2,7 +2,10 @@ import AddProfile from "@/components/AddProfile";
 import Button from "@/components/Button";
 import SearchBar from "@/components/SearchBar";
 import { ContactsContext } from "@/contexts/ContactsContext";
-import { editContact } from "@/utils/contacts";
+import { ProfilesContext } from "@/contexts/ProfilesContext";
+import DBHelper from "@/database/DBHelper";
+import { deduplicate, editContact } from "@/utils/contacts";
+import { retryUntilTrue } from "@/utils/hacks";
 import { useContext, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -17,6 +20,7 @@ type NavbarProps = {
 
 export default function Navbar({ canGoBack, onBack, showSearch, searchQuery, setSearchQuery }: NavbarProps) {
     const { currentContact } = useContext(ContactsContext);
+    const { setProfiles } = useContext(ProfilesContext);
     const [showAddProfile, setShowAddProfile] = useState(false);
 
     return (
@@ -35,10 +39,31 @@ export default function Navbar({ canGoBack, onBack, showSearch, searchQuery, set
                 <View style={styles.spacer} />
             )}
             {currentContact !== undefined && (
-                <Button icon="add" type="tertiary" onPress={() => setShowAddProfile(true)} />
+                <>
+                    <Button icon="add" type="tertiary" onPress={() => setShowAddProfile(true)} />
+                    <AddProfile
+                        visible={showAddProfile}
+                        onClose={async () => {
+                            setShowAddProfile(false);
+                            await retryUntilTrue(() => DBHelper.getDBStatus());
+                            const profiles = await DBHelper.getAllProfileObjs(currentContact);
+                            profiles.forEach(profile => {
+                                if (profile.contact !== undefined) {
+                                    profile.contact = deduplicate(profile.contact);
+                                    if (profile.contact.image === undefined) {
+                                        profile.contact.image = { uri: profile.picture_link }
+                                    }
+                                    else {
+                                        profile.contact.image.uri = profile.picture_link;
+                                    }
+                                }
+                            });
+                            setProfiles(profiles);
+                        }}
+                        currentContact={currentContact} />
+                </>
             )}
-            <AddProfile visible={showAddProfile} onClose={() => setShowAddProfile(false)} />
-                
+
             {currentContact !== undefined && (
                 <Button icon="edit" type="tertiary" onPress={() => {
                     editContact(currentContact);

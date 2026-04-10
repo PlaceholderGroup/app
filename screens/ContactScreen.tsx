@@ -8,7 +8,8 @@ import Button from "@/components/Button";
 import ProfileCarousel from "@/components/ProfileCarousel";
 import TabsSafeAreaView from "@/components/TabsSafeAreaView";
 import { ContactsContext } from "@/contexts/ContactsContext";
-import DBHelper, { profileObj } from "@/database/DBHelper";
+import { ProfilesContext } from "@/contexts/ProfilesContext";
+import DBHelper from "@/database/DBHelper";
 import { deduplicate } from "@/utils/contacts";
 import { retryUntilTrue } from "@/utils/hacks";
 import { openLink } from "@/utils/link";
@@ -20,8 +21,9 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
     const router = useRouter();
 
     const { setCurrentContact } = useContext(ContactsContext);
+    const { profiles, setProfiles } = useContext(ProfilesContext);
 
-    const [profiles, setProfiles] = useState<profileObj[]>([]);
+    // const [profiles, setProfiles] = useState<profileObj[]>([]);
     const [profileIndex, setProfileIndex] = useState<number>(0);
 
     useEffect(() => {
@@ -41,7 +43,7 @@ export default function ContactScreen({ contact }: { contact: Contacts.ExistingC
             });
             setProfiles(profileList);
         })();
-    }, [contact])
+    }, [contact]);
 
     useFocusEffect(
         useCallback(() => {

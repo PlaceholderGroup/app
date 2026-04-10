@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import { ContactsProvider } from "@/contexts/ContactsContext";
+import { ProfilesProvider } from "@/contexts/ProfilesContext";
 import DBHelper from "@/database/DBHelper";
 import { getContacts, syncContacts } from "@/utils/contacts";
 import { Lexend_300Light, Lexend_400Regular, Lexend_500Medium, useFonts } from "@expo-google-fonts/lexend";
@@ -81,29 +82,31 @@ export default function RootLayout() {
 
     return (
         <ContactsProvider data={contacts}>
-            <StatusBar style="dark" />
-            <ThemeProvider value={Theme}>
-                <Stack screenOptions={{
-                    headerShown: true,
-                    header: ({ options, route, navigation }) => {
-                        // TODO: I don't love this, but it works well enough for now
-                        const customOptions = options as CustomHeaderOptions & typeof options;
-                        return (
-                            <Navbar
-                                onBack={navigation.goBack}
-                                canGoBack={navigation.canGoBack()}
-                                showSearch={customOptions.showSearch}
-                                searchQuery={customOptions.searchQuery}
-                                setSearchQuery={customOptions.setSearchQuery}
-                            />
-                        )
-                    },
-                    headerTransparent: true,
-                }}>
-                    <Stack.Screen name="(tabs)" />
-                    <Stack.Screen name="contact/[id]" />
-                </Stack>
-            </ThemeProvider>
+            <ProfilesProvider data={[]}>
+                <StatusBar style="dark" />
+                <ThemeProvider value={Theme}>
+                    <Stack screenOptions={{
+                        headerShown: true,
+                        header: ({ options, route, navigation }) => {
+                            // TODO: I don't love this, but it works well enough for now
+                            const customOptions = options as CustomHeaderOptions & typeof options;
+                            return (
+                                <Navbar
+                                    onBack={navigation.goBack}
+                                    canGoBack={navigation.canGoBack()}
+                                    showSearch={customOptions.showSearch}
+                                    searchQuery={customOptions.searchQuery}
+                                    setSearchQuery={customOptions.setSearchQuery}
+                                />
+                            )
+                        },
+                        headerTransparent: true,
+                    }}>
+                        <Stack.Screen name="(tabs)" />
+                        <Stack.Screen name="contact/[id]" />
+                    </Stack>
+                </ThemeProvider>
+            </ProfilesProvider>
         </ContactsProvider>
     )
 }

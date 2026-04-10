@@ -1,17 +1,19 @@
 import Button from "@/components/Button";
-import DBHelper from "@/database/DBHelper";
+import DBHelper, { fields } from "@/database/DBHelper";
+import { deduplicate } from "@/utils/contacts";
+import { retryUntilTrue } from "@/utils/hacks";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as ImagePicker from "expo-image-picker";
-import * as SecureStore from "expo-secure-store";
 import { useEffect, useState } from "react";
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 type AddProfileProps = {
     visible: boolean;
     onClose: () => void;
+    currentContact: string;
 };
 
-export default function AddProfile({ visible, onClose }: AddProfileProps) {
+export default function AddProfile({ visible, onClose, currentContact }: AddProfileProps) {
 
     const [name, setName] = useState("");
     const [profileIcon, setProfileIcon] = useState<(typeof icons)[number] | null>(null);
@@ -76,19 +78,40 @@ export default function AddProfile({ visible, onClose }: AddProfileProps) {
     }
 
     async function getUserContact() {
-        const id = await SecureStore.getItemAsync("userId");
-        if (!id) return null;
-        return await DBHelper.getContactObj(id);
+        return await DBHelper.getContactObj(currentContact);
+    }
+
+    function getFields() {
+        const fields: fields[] = [];
+
+        function addFields(selected: any[] | undefined, field_name: "phoneNumbers" | "emails" | "addresses" | "socialProfiles") {
+            if (selected && contact) {
+                selected.forEach((id) => {
+                    const field = contact[field_name]?.find((f: any) => f.id === id);
+                    if (field?.id) {
+                        fields.push({ field_name, field_id: field.id });
+                    }
+                })
+            }
+        }
+        addFields(selectedFields.phones, "phoneNumbers");
+        addFields(selectedFields.emails, "emails");
+        addFields(selectedFields.addresses, "addresses");
+        addFields(selectedFields.socials, "socialProfiles");
+
+        return fields;
     }
 
     useEffect(() => {
         if (step === 2) {
             (async () => {
                 const data = await getUserContact();
-                setContact(data);
+                if (data) {
+                    setContact(deduplicate(data));
+                }
             })();
         }
-    }, [step]);
+    }, [step, currentContact]);
 
     const CheckboxRow = ({ text, label, checked, onPress }: any) => (
         <Pressable onPress={onPress} style={{ flexDirection: "row", alignItems: "center", marginVertical: 3 }}>
@@ -156,7 +179,7 @@ export default function AddProfile({ visible, onClose }: AddProfileProps) {
                             <ScrollView showsVerticalScrollIndicator={false} bounces={true} style={{ flexGrow: 1 }}>
 
                                 {/* numbers */}
-                                {contact.phoneNumbers?.length > 0 && (
+                                {contact.phoneNumbers && (
                                     <>
                                         <Text style={styles.label}>Phone Numbers</Text>
                                         {contact.phoneNumbers.map((p: any) => (
@@ -167,7 +190,7 @@ export default function AddProfile({ visible, onClose }: AddProfileProps) {
                                 )}
 
                                 {/* email */}
-                                {contact.emails?.length > 0 && (
+                                {contact.emails && (
                                     <>
                                         <Text style={styles.label}>Emails</Text>
                                         {contact.emails.map((e: any) => (
@@ -178,7 +201,7 @@ export default function AddProfile({ visible, onClose }: AddProfileProps) {
                                 )}
 
                                 {/* addr */}
-                                {contact.addresses?.length > 0 && (
+                                {contact.addresses && (
                                     <>
                                         <Text style={styles.label}>Addresses</Text>
                                         {contact.addresses.map((a: any) => (
@@ -189,7 +212,7 @@ export default function AddProfile({ visible, onClose }: AddProfileProps) {
                                 )}
 
                                 {/* date */}
-                                {contact.dates?.length > 0 && (
+                                {contact.dates && (
                                     <>
                                         <Text style={styles.label}>Dates</Text>
                                         {contact.dates.map((d: any, i: number) => (
@@ -200,8 +223,9 @@ export default function AddProfile({ visible, onClose }: AddProfileProps) {
                                 )}
 
                                 {/* social profs */}
-                                {contact.socialProfiles?.length > 0 && (
+                                {contact.socialProfiles && contact.socialProfiles.length > 0 && (
                                     <>
+                                        {console.log(contact.socialProfiles)}
                                         <Text style={styles.label}>Social Profiles</Text>
                                         {contact.socialProfiles.map((s: any, i: number) => (
                                             <CheckboxRow key={i} label={`${s.label}`} text={`${s.username}`}
@@ -218,52 +242,31 @@ export default function AddProfile({ visible, onClose }: AddProfileProps) {
                                     icon="check"
                                     type="tertiary"
 
-                                    onPress={() => {
-                                        console.log("Profile created.");
-                                        setStep(1);
-                                        onClose();
-                                    }}
-                                    // onPress={async () => {
-                                    //     if (!contact) return;
-
-                                    //     try {
-                                    //         const ownContact = await DBHelper.getContactObj(contact.id);
-                                    //         //console.log(ownContact?.id);
-                                    //         const profile = await DBHelper.createProfileObj(
-                                    //             contact.id,
-                                    //             name,
-                                    //             profileIcon!,
-                                    //             profileImage!,
-                                    //             [
-                                    //                 ...selectedFields.phones.map(id => {
-                                    //                     const phone = contact.phoneNumbers.find((p: any) => p.id === id);
-                                    //                     return { field_name: "phoneNumbers", field_id: phone.id };
-                                    //                 }),
-                                    //                 ...selectedFields.emails.map(id => {
-                                    //                     const email = contact.emails.find((e: any) => e.id === id);
-                                    //                     return { field_name: "emails", field_id: email.id };
-                                    //                 }),
-                                    //                 ...selectedFields.addresses.map(id => {
-                                    //                     const addr = contact.addresses.find((a: any) => a.id === id);
-                                    //                     return { field_name: "addresses", field_id: addr.id };
-                                    //                 }),
-                                    //                 // ...selectedFields.dates.map(idx => {
-                                    //                 //     const date = contact.dates[idx];
-                                    //                 //     return { field_name: date.label, field_id: idx };
-                                    //                 // }),
-                                    //                 ...selectedFields.socials.map(id => {
-                                    //                     const social = contact.socialProfiles.find((s: any) => s.id === id);
-                                    //                     return { field_name: "socialProfiles", field_id: social.id };
-                                    //                 }),
-                                    //             ]
-                                    //         );
-                                    //         console.log("Profile created:", profile);
-                                    //         setStep(1);
-                                    //         onClose();
-                                    //     } catch (error) {
-                                    //         console.error("Error creating profile:", error);
-                                    //     }
+                                    // onPress={() => {
+                                    //     console.log("Profile created.");
+                                    //     setStep(1);
+                                    //     onClose();
                                     // }}
+                                    onPress={async () => {
+                                        if (!contact) return;
+
+                                        try {
+                                            // NOTE: This SHOULD automatically return true, but I added it just in case
+                                            await retryUntilTrue(() => DBHelper.getDBStatus());
+                                            const profile = await DBHelper.createProfileObj(
+                                                contact.id,
+                                                name,
+                                                profileIcon!,
+                                                profileImage!,
+                                                getFields()
+                                            );
+                                            console.log("Profile created:", profile);
+                                            setStep(1);
+                                            onClose();
+                                        } catch (error) {
+                                            console.error("Error creating profile:", error);
+                                        }
+                                    }}
                                 />
                             </View>
                         </View>
